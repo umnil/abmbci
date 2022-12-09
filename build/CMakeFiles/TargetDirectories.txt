@@ -1,7 +1,0 @@
-/Users/kevindavis/Documents/Computer-Projects/C++-Projects/abmbci/build/CMakeFiles/abm.dir
-/Users/kevindavis/Documents/Computer-Projects/C++-Projects/abmbci/build/CMakeFiles/edit_cache.dir
-/Users/kevindavis/Documents/Computer-Projects/C++-Projects/abmbci/build/CMakeFiles/rebuild_cache.dir
-/Users/kevindavis/Documents/Computer-Projects/C++-Projects/abmbci/build/CMakeFiles/list_install_components.dir
-/Users/kevindavis/Documents/Computer-Projects/C++-Projects/abmbci/build/CMakeFiles/install.dir
-/Users/kevindavis/Documents/Computer-Projects/C++-Projects/abmbci/build/CMakeFiles/install/local.dir
-/Users/kevindavis/Documents/Computer-Projects/C++-Projects/abmbci/build/CMakeFiles/install/strip.dir
