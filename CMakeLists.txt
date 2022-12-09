@@ -18,7 +18,15 @@ add_executable("${PROJECT_NAME}"
 message(STATUS "INCLUDE DIRS: ${ABMSDK_INCLUDE_DIRS}")
 target_include_directories("${PROJECT_NAME}" BEFORE
   PUBLIC
-    ABMSDK_INCLUDE_DIRS
+    "${ABMSDK_INCLUDE_DIRS}"
 )
 
-install(TARGETS "${PROJECT_NAME}" DESTINATION bin)
+target_link_libraries("${PROJECT_NAME}"
+  PUBLIC
+    "-L'${ABMSDK_LIBRARY_DIRS}'"
+    "-l:ABM_Athena.lib"
+    #"-L'${ABMSDK_BINARY_DIRS}'"
+    #"-l:ABM_Athena.dll"
+)
+
+install(TARGETS "${PROJECT_NAME}" DESTINATION "${CMAKE_BINARY_DIR}/bin")

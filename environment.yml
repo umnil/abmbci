@@ -4,4 +4,4 @@ channels:
   - conda-forge
   - defaults
 variables:
-  ABMSDK: /path/to/abm/sdk
+  ABMSDK: /Users/kevindavis/Library/CloudStorage/Box-Box/Kevin\ Davis/Software/ABM/B-Alert\ Live\ v02.04.05.00/B-Alert\ Live\ v02.04.05.00/WinRoot/ABM/B-Alert/SDK
