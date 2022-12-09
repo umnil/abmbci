@@ -1,0 +1,5 @@
+name: abmbci
+channels:
+  - c4aarch64
+  - conda-forge
+  - defaults
