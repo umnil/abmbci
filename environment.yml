@@ -3,3 +3,5 @@ channels:
   - c4aarch64
   - conda-forge
   - defaults
+variables:
+  ABMSDK: /path/to/abm/sdk
