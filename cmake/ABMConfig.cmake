@@ -2,6 +2,8 @@
 
 if(DEFINED ENV{ABMSDK})
   set(ABMSDK_FOUND true)
+else()
+  set(ENV{ABMSDK} "C:\\ABM\\B-Alert\\SDK")
 endif()
 
 set(ABMSDK_INCLUDE_DIRS "$ENV{ABMSDK}/include")
@@ -22,3 +24,7 @@ endif()
 install(DIRECTORY "${ABMSDK_BINARY_DIRS}/"
   DESTINATION "${CMAKE_BINARY_DIR}/bin"
 )
+
+add_library(ABM_athena SHARED IMPORTED)
+set_property(TARGET ABM_athena PROPERTY IMPORTED_LOCATION "${ABMSDK_BINARY_DIRS}/ABM_Athena.dll")
+set_property(TARGET ABM_athena PROPERTY IMPORTED_IMPLIB "${ABMSDK_LIBRARY_DIRS}/ABM_Athena.lib")

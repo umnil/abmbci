@@ -11,7 +11,7 @@ find_package(ABM REQUIRED
   HINTS cmake
 )
 
-add_executable("${PROJECT_NAME}"
+add_executable("${PROJECT_NAME}" WIN32
   src/main.cpp
 )
 
@@ -23,10 +23,7 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 
 target_link_libraries("${PROJECT_NAME}"
   PUBLIC
-    "-L'${ABMSDK_LIBRARY_DIRS}'"
-    "-l:ABM_Athena.lib"
-    #"-L'${ABMSDK_BINARY_DIRS}'"
-    #"-l:ABM_Athena.dll"
+    ABM_athena
 )
 
 install(TARGETS "${PROJECT_NAME}" DESTINATION "${CMAKE_BINARY_DIR}/bin")
