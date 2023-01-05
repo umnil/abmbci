@@ -1,43 +1,65 @@
+#define UNICODE
 #include <windows.h>
+#include <tchar.h>
 #include <iostream>
 #include <string>
 
-extern "C" {
-#include "Athena.h"
-}
-
-typedef _DEVICE_INFO* (*PGetDeviceInfo)(_DEVICE_INFO*);
-typedef float* (*PGetRawData)(int&);
+#undef UNICODE
+#include "AbmSdkInclude.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-  // Load Module Procedures
-  HMODULE module = LoadLibrary("ABM_Athena.dll");
-  if (module == NULL) {
-    MessageBox(NULL, "Failed to load the Athena Library", "ERROR", MB_ICONERROR | MB_OK);
+  _DEVICE_INFO* device_info = GetDeviceInfoKeepConnection(NULL);
+  if (device_info == NULL) {
+    MessageBox(NULL, L"Failed to find device", L"ERROR", MB_ICONERROR | MB_OK);
+    CloseCurrentConnection();
     return 0;
   }
-  PGetDeviceInfo pGetDeviceInfo = (PGetDeviceInfo)GetProcAddress(module, "GetDeviceInfo");
-  PGetRawData pGetRawData = (PGetRawData)GetProcAddress(module, "GetRawData");
+  
+  // Print the device name
+  std::basic_string<TCHAR> alert = std::basic_string<TCHAR>(_T(L"Device: ")) + device_info->chDeviceName;
+  MessageBox(NULL, alert.c_str(), L"INFO", MB_OK);
 
-  _DEVICE_INFO* device_info = pGetDeviceInfo(NULL);
-  if (device_info != NULL) {
-    char const* device_name = device_info->chDeviceName;
-    std::string alert = std::string("Device: ") + device_name;
-    MessageBox(NULL, alert.c_str(), "INFO", MB_OK);
+  // Point to configuration files
+  std::wstring config_path(L"C:/ABM/B-Alert/Config/");
+  int result = SetConfigPath(config_path.data());
+  if (result != 1) {
+      MessageBox(NULL, L"Failed to set config path", L"ERROR", MB_ICONERROR | MB_OK);
+      CloseCurrentConnection();
+      return 0;
   }
-
+  MessageBox(NULL, L"Set Config Path", L"INFO", MB_OK);
+  
+  // Initialize the session
+  if(InitSessionForCurrentConnection(ABM_DEVICE_X24Standard, ABM_SESSION_RAW, -1, false) != INIT_SESSION_OK) {
+    MessageBox(NULL, L"Failed to initialize EEG session", L"ERROR", MB_ICONERROR | MB_OK);
+    CloseCurrentConnection();
+    return 0;
+  }
+  MessageBox(NULL, L"Session initialized", L"INFO", MB_OK);
+  
+  // Start Data Acquisition
+  if(StartAcquisitionForCurrentConnection() != ACQ_STARTED_OK) {
+    MessageBox(NULL, L"Failed to begin data acquisition", L"ERROR", MB_ICONERROR | MB_OK);
+    return 0;
+  }
+  MessageBox(NULL, L"Session started", L"INFO", MB_OK);
+ 
   int n_samples = 5;
-  float* data = pGetRawData(n_samples);
+  float* data = GetRawData(n_samples);
   if (data == NULL) {
-    MessageBox(NULL, "Failed to collect data", "ERROR", MB_ICONERROR | MB_OK);
+    MessageBox(NULL, L"Failed to collect data", L"ERROR", MB_ICONERROR | MB_OK);
     return 0;
   }
-  std::string data_message = "";
+  MessageBox(NULL, L"Data Collected!", L"INFO", MB_OK);
+  std::wstring data_message = L"";
   for (int i = 0; i < 5; i++) {
-    data_message += std::to_string(data[i]) + ", ";
+    data_message += std::to_wstring(data[i]) + L", ";
   }
-  MessageBox(NULL, data_message.c_str(), "Data", MB_OK); 
-  MessageBox(NULL, "Hello, Message Box!", "Message", MB_OK);
-  std::cout << "Hello, World!" << std::endl;
+  MessageBox(NULL, data_message.c_str(), L"Data", MB_OK); 
+
+  StopAcquisitionKeepConnection();
+  MessageBox(NULL, L"Hello, Message Box!", L"Message", MB_OK);
+  
+  CloseCurrentConnection();
   return 0;
 }

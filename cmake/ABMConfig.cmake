@@ -3,6 +3,7 @@
 if(DEFINED ENV{ABMSDK})
   set(ABMSDK_FOUND true)
 else()
+  #set(ENV{ABMSDK} "C:\\Users\\EEG\\Documents\\SDK")
   set(ENV{ABMSDK} "C:\\ABM\\B-Alert\\SDK")
 endif()
 

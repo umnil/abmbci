@@ -15,6 +15,8 @@ add_executable("${PROJECT_NAME}" WIN32
   src/main.cpp
 )
 
+target_compile_options("${PROJECT_NAME}" PUBLIC /Gd)
+
 message(STATUS "INCLUDE DIRS: ${ABMSDK_INCLUDE_DIRS}")
 target_include_directories("${PROJECT_NAME}" BEFORE
   PUBLIC
@@ -22,7 +24,7 @@ target_include_directories("${PROJECT_NAME}" BEFORE
 )
 
 target_link_libraries("${PROJECT_NAME}"
-  PUBLIC
+  PRIVATE
     ABM_athena
 )
 
