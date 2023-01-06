@@ -15,7 +15,9 @@ add_executable("${PROJECT_NAME}" WIN32
   src/main.cpp
 )
 
-target_compile_options("${PROJECT_NAME}" PUBLIC /Gd)
+if(MSVC)
+    target_compile_options("${PROJECT_NAME}" PUBLIC /Gd)
+endif()
 
 message(STATUS "INCLUDE DIRS: ${ABMSDK_INCLUDE_DIRS}")
 target_include_directories("${PROJECT_NAME}" BEFORE
