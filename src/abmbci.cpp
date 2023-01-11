@@ -39,4 +39,17 @@ PYBIND11_MODULE(abmbci, m) {
     [](_DEVICE_INFO* device_info){ return GetDeviceInfoKeepConnection(device_info); },
     py::arg("device_info") = nullptr
   );
+
+  m.def("set_config_path", [](std::wstring& path){ SetConfigPath(path.data()); });
+
+  m.def(
+    "init_session",
+    [](int device_type, int session_type, int device_handle, int play_ebs ){
+      return InitSession(device_type, session_type, device_handle, play_ebs);
+    },
+    py::arg("device_type"),
+    py::arg("session_type"),
+    py::arg("device_handle") = 0,
+    py::arg("play_ebs") = 0
+  );
 }
