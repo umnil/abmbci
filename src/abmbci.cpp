@@ -1,13 +1,18 @@
 #define UNICODE
+#define NOMINMAX 1
 #include <windows.h>
 #include "AbmSdkInclude.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(abmbci, m) {
+PYBIND11_MODULE(abmbciext, m) {
   m.doc() = "Advanced Brain Monitoring B-Alert Python SDK";
+
+  m.def("get_sdk_dir", [](){ return ABMSDK; });
+
   py::class_<_DEVICE_INFO>(m, "DeviceInfo")
     .def_property("device_name", [](_DEVICE_INFO const& di){
       return std::wstring(di.chDeviceName);
@@ -40,16 +45,46 @@ PYBIND11_MODULE(abmbci, m) {
     py::arg("device_info") = nullptr
   );
 
-  m.def("set_config_path", [](std::wstring& path){ SetConfigPath(path.data()); });
+  m.def("close_current_connection", [](){ return CloseCurrentConnection(); });
 
   m.def(
-    "init_session",
+    "set_config_path",
+    [](std::wstring& path){ 
+      if (path.back() != L'\\') {
+        path += L"\\";
+      }
+      return SetConfigPath(path.data()); 
+    },
+    py::arg("path") = CONFIG
+  );
+
+  m.def(
+    "init_session_for_current_connection",
     [](int device_type, int session_type, int device_handle, int play_ebs ){
-      return InitSession(device_type, session_type, device_handle, play_ebs);
+      return InitSessionForCurrentConnection(device_type, session_type, device_handle, play_ebs);
     },
     py::arg("device_type"),
-    py::arg("session_type"),
-    py::arg("device_handle") = 0,
+    py::arg("session_type") = 0,
+    py::arg("device_handle") = -1,
     py::arg("play_ebs") = 0
   );
+
+  m.def("start_acquisition_for_current_connection", [](){ return StartAcquisitionForCurrentConnection(); });
+  m.def("stop_acquisition_keep_connection", [](){ return StopAcquisitionKeepConnection(); });
+
+  m.def(
+    "get_raw_data",
+    [](_DEVICE_INFO* di, int n_samples){
+      float* data = GetRawData(n_samples);
+      int n_cols = di->nNumberOfChannel + 6;
+      return py::array_t<float>(
+        { n_samples, n_cols },
+        { sizeof(float) * n_cols, sizeof(float) },
+        data
+      );
+    },
+    py::arg("di"),
+    py::arg("n_samples") = 1
+  );
+
 }

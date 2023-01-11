@@ -1,27 +1,39 @@
 import os
 
 from pybind11.setup_helpers import Pybind11Extension, build_ext
-from setuptools import setup
+from setuptools import setup, find_packages
 
+sdk_dir = os.environ["ABMSDK"]
+system_dir = os.path.dirname(sdk_dir)
+config_dir = os.path.join(system_dir, "Config")
+sdk_bin_dir = os.path.join(sdk_dir, "bin")
+sdk_lib_dir = os.path.join(sdk_dir, "lib")
+sdk_inc_dir = os.path.join(sdk_dir, "include")
 
 ext_modules = [
     Pybind11Extension(
-        "abmbci",
+        "abmbciext",
         ["src/abmbci.cpp"],
-        include_dirs=[f"{os.environ['ABMSDK']}/include"],
-        library_dirs=[f"{os.environ['ABMSDK']}/lib"],
+        include_dirs=[sdk_inc_dir],
+        define_macros=[
+            ("ABMSDK", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
+            ("CONFIG", 'L"' + config_dir.replace("\\", "\\\\") + '"')
+        ],
+        extra_compile_args=["/DWIN32", "/D_WINDOWS"],
+        library_dirs=[sdk_lib_dir],
         libraries=["ABM_Athena"]
     )
 ]
 
 setup(
     name="abmbci",
+    packages=find_packages(),
     data_files=[
         (
             "lib\\site-packages\\", 
             [
-                os.path.join(os.environ["ABMSDK"], "bin", x)
-                for x in os.listdir(os.path.join(os.environ["ABMSDK"], "bin"))
+                os.path.join(sdk_bin_dir , x)
+                for x in os.listdir(sdk_bin_dir)
             ]
         )
     ],
