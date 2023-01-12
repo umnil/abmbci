@@ -6,6 +6,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
+#include <iostream>
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(abmbciext, m) {
@@ -13,6 +15,9 @@ PYBIND11_MODULE(abmbciext, m) {
 
   m.def("get_sdk_dir", [](){ return ABMSDK; });
 
+  // =======================================================
+  // CLASSES
+  // =======================================================
   py::class_<_DEVICE_INFO>(m, "DeviceInfo")
     .def_property("device_name", [](_DEVICE_INFO const& di){
       return std::wstring(di.chDeviceName);
@@ -38,6 +43,40 @@ PYBIND11_MODULE(abmbciext, m) {
         di.chDeviceID
       );
     });
+
+  py::class_<_EEGCHANNELS_INFO>(m, "EEGChannelsInfo")
+    .def_property("channel_names", [](_EEGCHANNELS_INFO const& eci) {
+      std::vector<std::string> channel_names;
+      for (auto name : eci.cChName) {
+        channel_names.push_back(name);
+      }
+      return channel_names;
+    }, [](_EEGCHANNELS_INFO& eci, std::vector<std::string> const& channel_names) {
+      for (uint32_t i = 0; i < MAX_NUM_EEGCHANNELS; i++) {
+        std::memset(eci.cChName[i], 0, MAX_LENGTH_CHANNEL_NAME);
+        if (i < channel_names.size()) {
+          auto end = (channel_names[i].size() < MAX_LENGTH_CHANNEL_NAME) ? channel_names[i].end() : channel_names[i].begin() + (MAX_LENGTH_CHANNEL_NAME - 1);
+          std::copy(channel_names[i].begin(), end, eci.cChName[i]);
+        }
+      }
+    })
+    .def_property("used_channels", [](_EEGCHANNELS_INFO const& eci) {
+      return py::array_t<bool>(
+        { MAX_NUM_EEGCHANNELS },
+        eci.bChUsed
+      );
+    }, [](_EEGCHANNELS_INFO& eci, py::array_t<bool> const& list){
+      std:memset(eci.bChUsed, 0, MAX_NUM_EEGCHANNELS);
+      std::copy(
+        list.begin(),
+        (list.size() < MAX_NUM_EEGCHANNELS) ? list.end() : list.begin() + (MAX_NUM_EEGCHANNELS - 1),
+        eci.bChUsed
+      );
+    });
+
+  // =======================================================
+  // Functions
+  // =======================================================
 
   m.def(
     "get_device_info_keep_connection",
