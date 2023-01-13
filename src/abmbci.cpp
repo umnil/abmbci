@@ -15,10 +15,15 @@
 
 namespace py = pybind11;
 
-std::function<void(ELECTRODE*, int&)> global_callback;
+std::function<void(ELECTRODE*, int&)> general_impedance_callback;
+std::function<void(std::wstring, float)> electrode_impedance_callback;
 
 void __stdcall ImpedanceCallback(ELECTRODE* e, int& i) {
-  global_callback(e, i);
+  general_impedance_callback(e, i);
+}
+
+void __stdcall SingleImpedanceCallback(TCHAR* chName, float imp) {
+  electrode_impedance_callback(chname, imp);
 }
 
 
@@ -153,11 +158,18 @@ PYBIND11_MODULE(abmbciext, m) {
   );
 
   m.def(
+    "register_callback_impedance_electrode_finished_a",
+    [](std::function<void(std::wstring, float)> callback) {
+      electrode_impedance_callback = callback;
+      return RegisterCallbackImpedanceElectrodeFinishedA(SingleImpedanceCallback);
+  );
+
+  m.def(
     "check_selected_impedances_for_current_connection",
     [](std::function<void(ELECTRODE*, int&)> callback, std::vector<std::wstring>& channels) {
       TCHAR* channel_names[30] = { 0 };
       for (uint32_t i = 0; i < channels.size(); i++) channel_names[i] = channels[i].data();
-      global_callback = callback;
+      general_impedance_callback = callback;
       return CheckSelectedImpedancesForCurrentConnection(ImpedanceCallback, channel_names, channels.size(), 0);
     }
   );
