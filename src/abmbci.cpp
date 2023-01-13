@@ -19,11 +19,13 @@ std::function<void(ELECTRODE*, int&)> general_impedance_callback;
 std::function<void(std::wstring, float)> electrode_impedance_callback;
 
 void __stdcall ImpedanceCallback(ELECTRODE* e, int& i) {
+  std::cout << "ImpedanceCallback!" << std::endl;
   general_impedance_callback(e, i);
 }
 
 void __stdcall SingleImpedanceCallback(TCHAR* chName, float imp) {
-  electrode_impedance_callback(chname, imp);
+  std::cout << "Single Impedance Callback!" << std::endl;
+  electrode_impedance_callback(chName, imp);
 }
 
 
@@ -162,6 +164,7 @@ PYBIND11_MODULE(abmbciext, m) {
     [](std::function<void(std::wstring, float)> callback) {
       electrode_impedance_callback = callback;
       return RegisterCallbackImpedanceElectrodeFinishedA(SingleImpedanceCallback);
+    }
   );
 
   m.def(
