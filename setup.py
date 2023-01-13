@@ -13,8 +13,12 @@ sdk_inc_dir = os.path.join(sdk_dir, "include")
 ext_modules = [
     Pybind11Extension(
         "abmbciext",
-        ["src/abmbci.cpp"],
-        include_dirs=[sdk_inc_dir],
+        [
+            "src/device_info.cpp",
+            "src/eeg_channel_info.cpp",
+            "src/abmbci.cpp"
+        ],
+        include_dirs=[sdk_inc_dir, "include"],
         define_macros=[
             ("ABMSDK", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
             ("CONFIG", 'L"' + config_dir.replace("\\", "\\\\") + '"')

@@ -2,13 +2,25 @@
 #define NOMINMAX 1
 #include <windows.h>
 #include "AbmSdkInclude.h"
+#include "device_info.hpp"
+#include "eeg_channel_info.hpp"
+#include "electrodes_info.hpp"
+#include "channel_info.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 
 #include <iostream>
 
 namespace py = pybind11;
+
+std::function<void(ELECTRODE*, int&)> global_callback;
+
+void __stdcall ImpedanceCallback(ELECTRODE* e, int& i) {
+  global_callback(e, i);
+}
+
 
 PYBIND11_MODULE(abmbciext, m) {
   m.doc() = "Advanced Brain Monitoring B-Alert Python SDK";
@@ -19,60 +31,74 @@ PYBIND11_MODULE(abmbciext, m) {
   // CLASSES
   // =======================================================
   py::class_<_DEVICE_INFO>(m, "DeviceInfo")
-    .def_property("device_name", [](_DEVICE_INFO const& di){
-      return std::wstring(di.chDeviceName);
-    }, [](_DEVICE_INFO& di, std::wstring const& val){
-      std::copy(
-        val.begin(),
-        (val.size() < 256) ? val.end() : val.begin() + 255,
-        di.chDeviceName
-      );
-    })
+    .def_property("device_name", &device_info_get_device_name, &device_info_set_device_name)
     .def_readwrite("comm_port", &_DEVICE_INFO::nCommPort)
     .def_readwrite("n_ecg_pos", &_DEVICE_INFO::nECGPos)
     .def_readwrite("n_channels", &_DEVICE_INFO::nNumberOfChannel)
     .def_readwrite("esu_type", &_DEVICE_INFO::nESUType)
     .def_readwrite("timestamp_type", &_DEVICE_INFO::nTymestampType)
     .def_readwrite("device_handle", &_DEVICE_INFO::nDeviceHandle)
-    .def_property("device_id", [](_DEVICE_INFO const& di){
-      return std::wstring(di.chDeviceID);
-    }, [](_DEVICE_INFO& di, std::wstring const& val){
-      std::copy(
-        val.begin(),
-        (val.size() < MAX_PATH) ? val.end() : val.begin() + 255,
-        di.chDeviceID
-      );
-    });
+    .def_property("device_id", &device_info_get_device_id, &device_info_set_device_id);
+
+  py::class_<ELECTRODE>(m, "Electrode")
+     .def_property("name", STRING_GETTER_SETTER(ELECTRODE, chName, std::wstring, 20)) //name of electrode
+     .def_readwrite("has_good_impedance", &ELECTRODE::bImpedance) //if impedance is well (low)
+     .def_readwrite("impedance_value", &ELECTRODE::fImpedanceValue); //value of impedance
+
+  py::class_<CHANNEL_INFO>(m, "ChannelInfo")
+    .def_property("chName", STRING_GETTER_SETTER(CHANNEL_INFO, chName, std::wstring, 20)) //name of electrode
+    .def_readwrite("bTechnicalInfo", &CHANNEL_INFO::bTechnicalInfo); //if impedance is well (low)
 
   py::class_<_EEGCHANNELS_INFO>(m, "EEGChannelsInfo")
-    .def_property("channel_names", [](_EEGCHANNELS_INFO const& eci) {
-      std::vector<std::string> channel_names;
-      for (auto name : eci.cChName) {
-        channel_names.push_back(name);
-      }
-      return channel_names;
-    }, [](_EEGCHANNELS_INFO& eci, std::vector<std::string> const& channel_names) {
-      for (uint32_t i = 0; i < MAX_NUM_EEGCHANNELS; i++) {
-        std::memset(eci.cChName[i], 0, MAX_LENGTH_CHANNEL_NAME);
-        if (i < channel_names.size()) {
-          auto end = (channel_names[i].size() < MAX_LENGTH_CHANNEL_NAME) ? channel_names[i].end() : channel_names[i].begin() + (MAX_LENGTH_CHANNEL_NAME - 1);
-          std::copy(channel_names[i].begin(), end, eci.cChName[i]);
-        }
-      }
-    })
-    .def_property("used_channels", [](_EEGCHANNELS_INFO const& eci) {
-      return py::array_t<bool>(
-        { MAX_NUM_EEGCHANNELS },
-        eci.bChUsed
-      );
-    }, [](_EEGCHANNELS_INFO& eci, py::array_t<bool> const& list){
-      std:memset(eci.bChUsed, 0, MAX_NUM_EEGCHANNELS);
-      std::copy(
-        list.begin(),
-        (list.size() < MAX_NUM_EEGCHANNELS) ? list.end() : list.begin() + (MAX_NUM_EEGCHANNELS - 1),
-        eci.bChUsed
-      );
-    });
+    .def_property("channel_names", &eeg_channel_info_get_channel_names, &eeg_channel_info_set_channel_names)
+    .def_property("used_channels", &eeg_channel_info_get_channels_used, &eeg_channel_info_set_channels_used)
+    .def_property("quality_channels", &eeg_channel_info_get_quality_channels, &eeg_channel_info_set_quality_channels)
+    .def_property("cleanable_channels", &eeg_channel_info_get_cleanable_channels, &eeg_channel_info_set_cleanable_channels)
+    .def_property("eeg_channels", &eeg_channel_info_get_eeg_channels, &eeg_channel_info_set_eeg_channels)
+    .def_readwrite("flex", &_EEGCHANNELS_INFO::bIsFlex)
+    .def_readwrite("channel_map", &_EEGCHANNELS_INFO::nChannelMap);
+
+  py::class_<_ELECTRODES_INFO>(m, "ElectrodesInfo")
+    .def_readwrite("num_electrodes", &_ELECTRODES_INFO::nNumElectrodes)
+    .def_readwrite("stabilization", &_ELECTRODES_INFO::nStabilization)
+	  .def_readwrite("num_aggregation_samples", &_ELECTRODES_INFO::nAgregationsSamples)
+	  .def_readwrite("current_type", &_ELECTRODES_INFO::nCurrentType)
+    .def_property(
+      "electrode_names",
+      LIST_STRING_GETTER(_ELECTRODES_INFO, cElName, std::wstring),
+      LIST_STRING_SETTER(_ELECTRODES_INFO, cElName, MAX_NUM_ELECTRODE, std::wstring)
+    )  //[in]the name of electrode max 20 characters
+	  .def_property("command", LIST_GETTER(_ELECTRODES_INFO, nElCommand, MAX_NUM_ELECTRODE, int), LIST_SETTER(_ELECTRODES_INFO, nElCommand, MAX_NUM_ELECTRODE, int))  // Impedance command to be sent for this electrode to be measured
+	  .def_property("channels", LIST_GETTER(_ELECTRODES_INFO, nElChannel, MAX_NUM_ELECTRODE, int), LIST_SETTER(_ELECTRODES_INFO, nElChannel, MAX_NUM_ELECTRODE, int))  // EEG channel to be used when measuring electrode
+	  .def_property("ref_electrodes", LIST_GETTER(_ELECTRODES_INFO, nElReferentialElectrode, MAX_NUM_ELECTRODE, int), LIST_SETTER(_ELECTRODES_INFO, nElReferentialElectrode, MAX_NUM_ELECTRODE, int));  // Electrode to be used when substracting ref el. (-1 for none)
+
+  py::class_<_AUXDATA_INFO>(m, "AuxDataInfo")
+    .def_readwrite("is_ired", &_AUXDATA_INFO::bIred)
+    .def_readwrite("is_red", &_AUXDATA_INFO::bRed)
+	  .def_readwrite("has_tilt", &_AUXDATA_INFO::bTilt)
+	  .def_readwrite("ecg_index", &_AUXDATA_INFO::nEcgIndex)	
+	  .def_readwrite("has_mic", &_AUXDATA_INFO::bMic)
+	  .def_readwrite("has_haptics", &_AUXDATA_INFO::bHaptic);
+
+  py::class_<_HARDWARE_INFO>(m, "HardwareInfo")
+	  .def_readwrite("max_battery", &_HARDWARE_INFO::nBatteryMax) //millivolts
+	  .def_readwrite("min_battery", &_HARDWARE_INFO::nBatteryMin) //millivolts	
+	  .def_readwrite("tilt_a", &_HARDWARE_INFO::nTiltLinearTransformA)
+	  .def_readwrite("tilt_b", &_HARDWARE_INFO::nTiltLinearTransformB);
+
+  py::class_<_SESSIONTYPES_INFO>(m, "SessionTypesInfo")
+	  .def_readwrite("is_decon_supported", &_SESSIONTYPES_INFO::bDecon) //whether decontamination is supported or not
+	  .def_readwrite("classification_supported", &_SESSIONTYPES_INFO::bBalert)//whether b-alert classification is supported or not
+	  .def_readwrite("workload_supported", &_SESSIONTYPES_INFO::bWorkload);	//whether workload calculation is supported or not
+  
+  py::class_<_CHANNELMAP_INFO>(m, "ChannelMapInfo")
+	  .def_readwrite("device_type", &_CHANNELMAP_INFO::nDeviceTypeCode)
+	  .def_readwrite("size", &_CHANNELMAP_INFO::nSize)
+	  .def_readwrite("eeg_channels", &_CHANNELMAP_INFO::stEEGChannels)
+	  .def_readwrite("electrodes", &_CHANNELMAP_INFO::stElectrodes)	
+	  .def_readwrite("aux_data", &_CHANNELMAP_INFO::stAuxData)
+	  .def_readwrite("hardware_info", &_CHANNELMAP_INFO::stHardwareInfo)
+	  .def_readwrite("session_types", &_CHANNELMAP_INFO::stSessionTypes);
 
   // =======================================================
   // Functions
@@ -124,6 +150,16 @@ PYBIND11_MODULE(abmbciext, m) {
     },
     py::arg("di"),
     py::arg("n_samples") = 1
+  );
+
+  m.def(
+    "check_selected_impedances_for_current_connection",
+    [](std::function<void(ELECTRODE*, int&)> callback, std::vector<std::wstring>& channels) {
+      TCHAR* channel_names[30] = { 0 };
+      for (uint32_t i = 0; i < channels.size(); i++) channel_names[i] = channels[i].data();
+      global_callback = callback;
+      return CheckSelectedImpedancesForCurrentConnection(ImpedanceCallback, channel_names, channels.size(), 0);
+    }
   );
 
 }
