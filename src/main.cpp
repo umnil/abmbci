@@ -1,6 +1,7 @@
 #define UNICODE
 #include <windows.h>
 #include <tchar.h>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -8,6 +9,7 @@
 
 #include "AbmSdkInclude.h"
 
+/*
 void print_sample(float* sample, int n_channels) {
     char time[256] = { 0 };
     sprintf(time, "%d:%d:%d:%f", sample[2], sample[3], sample[4], sample[5]);
@@ -18,12 +20,12 @@ void print_sample(float* sample, int n_channels) {
     /*for (int ch = 0; ch < n_channels; ch++) {
         float value = sample[ch + 6];
         std::cout << "ch" << ch << ": " << value << "\t";
-    }*/
+    }
     std::cout << "POz: " << sample[16 + 6];
     std::cout << std::endl;
     return;
 }
-
+*/
 int setup_console(void) {
   if (!AttachConsole(-1)) {
     MessageBox(NULL, L"Failed to attach console", L"ERROR", MB_ICONERROR | MB_OK);
@@ -41,18 +43,41 @@ void __stdcall impcallback(TCHAR* chname, float imp) {
   g_cb(chname, imp);
 }
 
+void __stdcall status_callback(_STATUS_INFO* status_info) {
+  std::cout << "Battery Level: " << status_info->BatteryPercentage << "%" << std::endl;
+} 
+
+void __stdcall detection_callback(wchar_t* message, int i) {
+  std::wstring wmessage = message;
+  std::wcout << L"Detection Callback " << wmessage << std::endl;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
   if (!setup_console()) {
-    return 1;
+     return 1;
+  }
+  std::cout << "Attached!" << std::endl; 
+
+  DWORD dwDebugLogPath = 0x100a4208;
+  std::wstring debug_log_path = reinterpret_cast<wchar_t*>(dwDebugLogPath);
+  std::wcout << L"Expected Debug Log Path: " << debug_log_path << std::endl;
+  if (!std::filesystem::exists(debug_log_path)) {
+    std::cout << "Creating Log path" << std::endl;
+    std::filesystem::create_directories(debug_log_path);
   }
 
-  std::cout << "Attached!" << std::endl;
+  RegisterCallbackDeviceDetectionInfo(detection_callback);
+  RegisterCallbackOnStatusInfo(status_callback);
+
   _DEVICE_INFO* device_info = GetDeviceInfoKeepConnection(NULL);
   if (device_info == NULL) {
     std::cout << "Failed to find device" << std::endl;
     CloseCurrentConnection();
     return 1;
   }
+
+  // Reg
+  // RegisterCallbackOnStatusInfo(status_callback);
   
   // Print the device name
   std::basic_string<TCHAR> alert = std::basic_string<TCHAR>(_T(L"Device: ")) + device_info->chDeviceName;
@@ -145,7 +170,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   std::cout << "Waiting for callbacks" << std::endl;
   while (imp_data.size() < 4) { Sleep(10); }
 
-  /*
+  /* 
   // Start Data Acquisition
   if(StartAcquisitionForCurrentConnection() != ACQ_STARTED_OK) {
     MessageBox(NULL, L"Failed to begin data acquisition", L"ERROR", MB_ICONERROR | MB_OK);
