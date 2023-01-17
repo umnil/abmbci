@@ -3,7 +3,7 @@
 if(DEFINED ENV{ABMSDK})
   set(ABMSDK_FOUND true)
 else()
-  set(ENV{ABMSDK} "C:\\ABM\\B-Alert\\SDK")
+  set(ENV{ABMSDK} "C:\\Users\\kevin\\Box\\Kevin Davis\\Software\\ABM\\B-Alert Live v02.04.05.00\\B-Alert Live v02.04.05.00\\WinRoot\\ABM\\B-Alert\\SDK")
 endif()
 
 set(ABMSDK_INCLUDE_DIRS "$ENV{ABMSDK}/include")
