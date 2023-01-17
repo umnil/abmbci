@@ -1,8 +1,8 @@
 import time
 import logging
-import asyncio
-import threading
 import abmbciext as abm
+
+from datetime import datetime, timedelta
 
 LOGGER = logging.getLogger(name=__name__)
 
@@ -88,7 +88,7 @@ class ABM:
         self.impedance = {}
         val = self._abm.check_selected_impedances_for_current_connection(cb, electrodes)
         if val == 1:
-            LOGGER.debug("Impedance check started")
+            LOGGER.info("Impedance check started")
         elif val == 0:
             LOGGER.warn("Invalid squence. Impedance check ignored")
             return
@@ -105,16 +105,12 @@ class ABM:
         self.check_imp()
 
     def af(self):
-        self.event = threading.Event()
-        self.event.clear()
-
         self.init()
         self.set_imp_callback()
-        def final_callback(x, i):
-            print(f"Finally Finished on thread {threading.get_native_id()}")
-            self.event.set()
-            print(f"Set: {self.event.is_set()}")
+        # def final_callback(x, i):
+        #     LOGGER.info("Done checking impedance values")
 
-        self.check_imp(final_callback)
-        print(f"Checking initiated on thread: {threading.get_native_id()}")
-        self.event.wait(timeout=120.0)
+        # self.check_imp(final_callback)
+
+        # while (len(self.impedance) < 3):
+        #     time.sleep(500)

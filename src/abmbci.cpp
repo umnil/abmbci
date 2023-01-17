@@ -1,33 +1,25 @@
 #define UNICODE
 #define NOMINMAX 1
 #include <windows.h>
-#include "AbmSdkInclude.h"
-#include "device_info.hpp"
-#include "eeg_channel_info.hpp"
-#include "electrodes_info.hpp"
-#include "channel_info.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 
+#undef UNICODE
+#include "AbmSdkInclude.h"
+
 #include <iostream>
 
+#include "callbacks.hpp"
+#include "channel_info.hpp"
+#include "device_info.hpp"
+#include "eeg_channel_info.hpp"
+#include "electrodes_info.hpp"
+#include "logging.hpp"
+
+
 namespace py = pybind11;
-
-std::function<void(ELECTRODE*, int&)> general_impedance_callback;
-std::function<void(std::wstring, float)> electrode_impedance_callback;
-
-void __stdcall ImpedanceCallback(ELECTRODE* e, int& i) {
-  std::cout << "ImpedanceCallback!" << std::endl;
-  general_impedance_callback(e, i);
-}
-
-void __stdcall SingleImpedanceCallback(TCHAR* chName, float imp) {
-  std::cout << "Single Impedance Callback!" << std::endl;
-  electrode_impedance_callback(chName, imp);
-}
-
 
 PYBIND11_MODULE(abmbciext, m) {
   m.doc() = "Advanced Brain Monitoring B-Alert Python SDK";
@@ -107,9 +99,28 @@ PYBIND11_MODULE(abmbciext, m) {
 	  .def_readwrite("hardware_info", &_CHANNELMAP_INFO::stHardwareInfo)
 	  .def_readwrite("session_types", &_CHANNELMAP_INFO::stSessionTypes);
 
+  py::class_<_STATUS_INFO>(m, "StatusInfo")
+	  .def_readwrite("battery_voltage", &_STATUS_INFO::BatteryVoltage)
+	  .def_readwrite("battery_percentage", &_STATUS_INFO::BatteryPercentage)
+	  .def_readwrite("timestamp", &_STATUS_INFO::Timestamp)
+	  .def_readwrite("total_missed_blocks", &_STATUS_INFO::TotalMissedBlocks)   
+	  .def_readwrite("abmsdk_mode", &_STATUS_INFO::ABMSDK_Mode)
+	  .def_readwrite("last_error_code", &_STATUS_INFO::LastErrorCode)
+	  .def_readwrite("custom_mark_a", &_STATUS_INFO::CustomMarkA)
+	  .def_readwrite("custom_mark_b", &_STATUS_INFO::CustomMarkB)
+	  .def_readwrite("custom_mark_c", &_STATUS_INFO::CustomMarkC)
+	  .def_readwrite("custom_mark_d", &_STATUS_INFO::CustomMarkD)
+	  .def_readwrite("total_samples_received", &_STATUS_INFO::nTotalSamplesReceived)
+	  .def_readwrite("online_imp_status", &_STATUS_INFO::OnLineImpStatus)
+	  .def_property("online_imp_values", LIST_GETTER(_STATUS_INFO, OnLineImpValues, 24, int), LIST_SETTER(_STATUS_INFO, OnLineImpValues, 24, int));
+
   // =======================================================
   // Functions
   // =======================================================
+
+  m.def("get_log_path", &get_log_path);
+  m.def("set_log_path", &set_log_path);
+  m.def("ensure_log_path", &ensure_logging);
 
   m.def(
     "get_device_info_keep_connection",
@@ -117,7 +128,12 @@ PYBIND11_MODULE(abmbciext, m) {
     py::arg("device_info") = nullptr
   );
 
-  m.def("close_current_connection", [](){ return CloseCurrentConnection(); });
+  m.def("close_current_connection", [](){ 
+    std::cout << "Closing Current Connection" << std::endl;
+    int retval = CloseCurrentConnection();
+    std::cout << "Connection closed" << std::endl;
+    return retval;
+  });
 
   m.def(
     "set_config_path",
@@ -159,22 +175,8 @@ PYBIND11_MODULE(abmbciext, m) {
     py::arg("n_samples") = 1
   );
 
-  m.def(
-    "register_callback_impedance_electrode_finished_a",
-    [](std::function<void(std::wstring, float)> callback) {
-      electrode_impedance_callback = callback;
-      return RegisterCallbackImpedanceElectrodeFinishedA(SingleImpedanceCallback);
-    }
-  );
-
-  m.def(
-    "check_selected_impedances_for_current_connection",
-    [](std::function<void(ELECTRODE*, int&)> callback, std::vector<std::wstring>& channels) {
-      TCHAR* channel_names[30] = { 0 };
-      for (uint32_t i = 0; i < channels.size(); i++) channel_names[i] = channels[i].data();
-      general_impedance_callback = callback;
-      return CheckSelectedImpedancesForCurrentConnection(ImpedanceCallback, channel_names, channels.size(), 0);
-    }
-  );
-
+  m.def("check_selected_impedances_for_current_connection", &check_selected_impedances_for_current_connection);
+  m.def("register_callback_impedance_electrode_finished_a", &register_callback_impedance_electrode_finished_a);
+  m.def("register_callback_device_detection_info", &register_callback_device_detection_info);
+  m.def("register_callback_on_status_info", &register_callback_on_status_info);
 }
