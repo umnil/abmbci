@@ -14,8 +14,10 @@ ext_modules = [
     Pybind11Extension(
         "abmbciext",
         [
+            "src/callbacks.cpp",
             "src/device_info.cpp",
             "src/eeg_channel_info.cpp",
+            "src/logging.cpp",
             "src/abmbci.cpp"
         ],
         include_dirs=[sdk_inc_dir, "include"],
@@ -23,7 +25,8 @@ ext_modules = [
             ("ABMSDK", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
             ("CONFIG", 'L"' + config_dir.replace("\\", "\\\\") + '"')
         ],
-        extra_compile_args=["/DWIN32", "/D_WINDOWS"],
+        extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
+        extra_linker_args=["/DEBUG"],
         library_dirs=[sdk_lib_dir],
         libraries=["ABM_Athena"]
     )
