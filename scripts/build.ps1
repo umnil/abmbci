@@ -17,17 +17,18 @@ cmake -A Win32 ..
 
 if (!($?)) {
     Set-Location -Path ..
-    Exit}
+    Exit
+}
 
 Write-Output "Building"
-cmake --build . --config Release
+cmake --build . --config Debug
 if (!($?)) {
     Set-Location ..
     Exit
 }
 
 Write-Output "Installing"
-cmake --install .
+cmake --install . --config Debug
 if (!($?)) {
     Set-Location ..
     Exit
