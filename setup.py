@@ -35,6 +35,9 @@ ext_modules = [
 setup(
     name="abmbci",
     packages=find_packages(),
+    install_requires=[
+        "pybind11"
+    ],
     data_files=[
         (
             "lib\\site-packages\\", 
