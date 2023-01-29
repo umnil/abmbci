@@ -14,10 +14,10 @@ ext_modules = [
     Pybind11Extension(
         "abmbciext",
         [
-            "src/callbacks.cpp",
-            "src/device_info.cpp",
-            "src/eeg_channel_info.cpp",
-            "src/logging.cpp",
+            "src/sdk/callbacks.cpp",
+            "src/sdk/device_info.cpp",
+            "src/sdk/eeg_channel_info.cpp",
+            "src/sdk/logging.cpp",
             "src/abmbci.cpp"
         ],
         include_dirs=[sdk_inc_dir, "include"],
@@ -34,7 +34,11 @@ ext_modules = [
 
 setup(
     name="abmbci",
+    version="0.1.0",
     packages=find_packages(),
+    setup_requires=[
+        "pybind11"
+    ],
     data_files=[
         (
             "lib\\site-packages\\", 
