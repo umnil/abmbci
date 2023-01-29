@@ -1,2 +1,4 @@
 .DS_Store
 /build
+*.egg-info/
+*.tar.gz
