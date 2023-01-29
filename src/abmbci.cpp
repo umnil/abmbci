@@ -11,12 +11,12 @@
 
 #include <iostream>
 
-#include "callbacks.hpp"
-#include "channel_info.hpp"
-#include "device_info.hpp"
-#include "eeg_channel_info.hpp"
-#include "electrodes_info.hpp"
-#include "logging.hpp"
+#include "sdk/callbacks.hpp"
+#include "sdk/channel_info.hpp"
+#include "sdk/device_info.hpp"
+#include "sdk/eeg_channel_info.hpp"
+#include "sdk/electrodes_info.hpp"
+#include "sdk/logging.hpp"
 
 
 namespace py = pybind11;
