@@ -27,7 +27,7 @@ class ABMHeadset {
     std::map<std::string, float> const& get_impedance_values(std::vector<std::string> electrodes = {});
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
-    int init(std::filesystem::path log_path);
+    int init(std::filesystem::path log_path = "");
   private:
     void callback_device_info_(std::wstring const&);
     void callback_electrode_impedance_(std::string const& channel, float const& impedance);
