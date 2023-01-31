@@ -1,5 +1,7 @@
 .DS_Store
-/build
+build/
 *.egg-info/
 *.tar.gz
-/dist
+dist/
+.vscode/
+**/*/__pycache__
