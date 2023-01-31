@@ -24,7 +24,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(abmbciext, m) {
   m.doc() = "Advanced Brain Monitoring B-Alert Python SDK";
 
-  m.def("get_sdk_dir", [](){ return ABMSDK; });
+  m.def("get_sdk_dir", [](){ return __ABMSDK__; });
 
   // =======================================================
   // CLASSES
@@ -143,7 +143,7 @@ PYBIND11_MODULE(abmbciext, m) {
       }
       return SetConfigPath(path.data()); 
     },
-    py::arg("path") = CONFIG
+    py::arg("path") = __CONFIG__
   );
 
   m.def(

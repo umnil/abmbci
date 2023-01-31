@@ -136,7 +136,13 @@ int ABMHeadset::init(std::filesystem::path log_path) {
 
     // Config path
     std::filesystem::path config_path("C:\\ABM\\B-Alert\\Config\\");
+#ifndef __ABMSDK__
     char* ABMSDK = std::getenv("ABMSDK");
+#else
+    std::wstring wsdk(__ABMSDK__);
+    std::string sdk(wsdk.begin(), wsdk.end());
+    char* ABMSDK = sdk.data();
+#endif
     if (ABMSDK != nullptr) {
         config_path = ABMSDK;
         config_path = config_path / ".." / "Config";

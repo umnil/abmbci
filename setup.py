@@ -22,8 +22,8 @@ ext_modules = [
         ],
         include_dirs=[sdk_inc_dir, "include"],
         define_macros=[
-            ("ABMSDK", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
-            ("CONFIG", 'L"' + config_dir.replace("\\", "\\\\") + '"')
+            ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
+            ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
         ],
         extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
         extra_linker_args=["/DEBUG"],
