@@ -1,5 +1,8 @@
+#include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <mutex>
+#include <thread>
 #include "headset/abmheadset.hpp"
 #include "sdk/sdk.hpp"
 
@@ -131,12 +134,6 @@ int ABMHeadset::init(std::filesystem::path log_path) {
     // Technical monitoring callback
     techcb = std::bind(&ABMHeadset::callback_monitoring_, this, std::placeholders::_1, std::placeholders::_2);
 
-    // Connect to the device
-    if (!this->connect_()) {
-        *this << "Failed to connect to the device" << std::endl;
-        return 4;
-    }
-
     // Config path
     std::filesystem::path config_path("C:\\ABM\\B-Alert\\Config\\");
     char* ABMSDK = std::getenv("ABMSDK");
@@ -152,6 +149,12 @@ int ABMHeadset::init(std::filesystem::path log_path) {
         *this << "Failed to set config path" << std::endl;
         this->disconnect_();
         return 5;
+    }
+
+    // Connect to the device
+    if (!this->connect_()) {
+        *this << "Failed to connect to the device" << std::endl;
+        return 6;
     }
 
     this->initialized_ = true;
