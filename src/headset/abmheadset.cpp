@@ -1,7 +1,14 @@
+#include <pybind11/iostream.h>
+#include <pybind11/pybind11.h>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <mutex>
+#include <thread>
 #include "headset/abmheadset.hpp"
 #include "sdk/sdk.hpp"
+
+namespace py = pybind11;
 
 std::function<void(std::wstring const&)> devcb;
 std::function<void(_STATUS_INFO*)> statcb;
@@ -93,7 +100,7 @@ std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) 
     for(int i = 0; i < data.second; i++) {
         for (std::string& s : data_keys) {
             if (retval.contains(s)) retval[s].push_back(data.first[p]);
-            else retval[s] = std::vector<float>(data.first[p]);
+            else retval[s] = std::vector<float>(1, data.first[p]);
             p++;
         }
     }
@@ -101,6 +108,7 @@ std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) 
 }
 
 int ABMHeadset::init(std::filesystem::path log_path) {
+    py::gil_scoped_release release;
     // Log Path
     if (!log_path.empty()) {
         set_log_path(log_path.wstring());
@@ -131,15 +139,15 @@ int ABMHeadset::init(std::filesystem::path log_path) {
     // Technical monitoring callback
     techcb = std::bind(&ABMHeadset::callback_monitoring_, this, std::placeholders::_1, std::placeholders::_2);
 
-    // Connect to the device
-    if (!this->connect_()) {
-        *this << "Failed to connect to the device" << std::endl;
-        return 4;
-    }
-
     // Config path
     std::filesystem::path config_path("C:\\ABM\\B-Alert\\Config\\");
+#ifndef __ABMSDK__
     char* ABMSDK = std::getenv("ABMSDK");
+#else
+    std::wstring wsdk(__ABMSDK__);
+    std::string sdk(wsdk.begin(), wsdk.end());
+    char* ABMSDK = sdk.data();
+#endif
     if (ABMSDK != nullptr) {
         config_path = ABMSDK;
         config_path = config_path / ".." / "Config";
@@ -152,6 +160,12 @@ int ABMHeadset::init(std::filesystem::path log_path) {
         *this << "Failed to set config path" << std::endl;
         this->disconnect_();
         return 5;
+    }
+
+    // Connect to the device
+    if (!this->connect_()) {
+        *this << "Failed to connect to the device" << std::endl;
+        return 6;
     }
 
     this->initialized_ = true;
@@ -193,7 +207,7 @@ void ABMHeadset::callback_monitoring_(CHANNEL_INFO* ch, int& n) {
 
 void ABMHeadset::callback_status_info_(_STATUS_INFO* status_info) {
     std::lock_guard<std::mutex> lock(this->battery_mutex_);
-    this->battery_percentage_ = status_info->BatteryPercentage;
+    this->battery_percentage_ = static_cast<float>(status_info->BatteryPercentage);
 }
 
 int ABMHeadset::connect_(void) {
@@ -257,10 +271,16 @@ void ABMHeadset::force_idle_(void) {
 
 std::wostream& ABMHeadset::operator<<(std::wstring const& in) {
     std::lock_guard<std::mutex> lock(this->cout_mutex_);
-    return std::wcout << in;
+    py::gil_scoped_acquire acquire;
+    py::scoped_ostream_redirect redirect;
+    std::string bin(in.begin(), in.end());
+    std::cout << bin;
+    return std::wcout;
 }
 std::ostream& ABMHeadset::operator<<(std::string const& in) {
     std::lock_guard<std::mutex> lock(this->cout_mutex_);
+    py::gil_scoped_acquire acquire;
+    py::scoped_ostream_redirect redirect;
     return std::cout << in;
 }
 
