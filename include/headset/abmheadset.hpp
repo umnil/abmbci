@@ -9,6 +9,11 @@
 #include <vector>
 #include "sdk/sdk.hpp"
 #include "headset/state.hpp"
+#ifdef __PYBIND11__
+#include <pybind11/pybind11.h>
+#include <pybind11/iostream.h>
+namespace py = pybind11;
+#endif  /* __PYBIND11__ */
 extern std::function<void(std::wstring const&)> devcb;
 extern std::function<void(_STATUS_INFO*)> statcb;
 extern std::function<void(ELECTRODE*, int&)> impcb;
@@ -37,8 +42,7 @@ class ABMHeadset {
     int connect_(void);
     int disconnect_(void);
     void force_idle_(void);
-    std::wostream& operator<<(std::wstring const& in);
-    std::ostream& operator<<(std::string const& in);
+	ABMHeadset& operator<<(std::string const& in);
     int start_acquisition_(void);
     int start_impedance_(std::vector<std::string> const& electrodes);
     int start_session_(int device = ABM_DEVICE_X24Standard, int session_type = ABM_SESSION_RAW);
@@ -63,4 +67,5 @@ class ABMHeadset {
     State state_ = State::IDLE;
     std::recursive_mutex state_mutex_;
 };
+
 #endif  /* INCLUDE_HEADSET_ABMHEADSET_HPP_ */

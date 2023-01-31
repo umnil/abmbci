@@ -1,5 +1,8 @@
+#ifdef __PYBIND11__
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
+#endif  /* __PYBIND11__ */
+
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -8,7 +11,9 @@
 #include "headset/abmheadset.hpp"
 #include "sdk/sdk.hpp"
 
+#ifdef __PYBIND11__
 namespace py = pybind11;
+#endif  /* __PYBIND11__ */
 
 std::function<void(std::wstring const&)> devcb;
 std::function<void(_STATUS_INFO*)> statcb;
@@ -108,7 +113,9 @@ std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) 
 }
 
 int ABMHeadset::init(std::filesystem::path log_path) {
+#ifdef __PYBIND11__
     py::gil_scoped_release release;
+#endif  /* __PYBIND11__ */
     // Log Path
     if (!log_path.empty()) {
         set_log_path(log_path.wstring());
@@ -269,19 +276,16 @@ void ABMHeadset::force_idle_(void) {
     return;
 }
 
-std::wostream& ABMHeadset::operator<<(std::wstring const& in) {
+ABMHeadset& ABMHeadset::operator<<(std::string const& in) {
     std::lock_guard<std::mutex> lock(this->cout_mutex_);
+#ifdef __PYBIND11__
     py::gil_scoped_acquire acquire;
     py::scoped_ostream_redirect redirect;
-    std::string bin(in.begin(), in.end());
-    std::cout << bin;
-    return std::wcout;
-}
-std::ostream& ABMHeadset::operator<<(std::string const& in) {
-    std::lock_guard<std::mutex> lock(this->cout_mutex_);
-    py::gil_scoped_acquire acquire;
-    py::scoped_ostream_redirect redirect;
-    return std::cout << in;
+	py::print(in, "end"_a="");
+#else  /* __PYBIND11__ */
+    std::cout << in;
+#endif  /* __PYBIND11__ */
+    return *this;
 }
 
 int ABMHeadset::start_acquisition_(void) {
