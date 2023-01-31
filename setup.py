@@ -14,6 +14,7 @@ ext_modules = [
     Pybind11Extension(
         "abmbciext",
         [
+            "src/headset/abmheadset.cpp",
             "src/sdk/callbacks.cpp",
             "src/sdk/device_info.cpp",
             "src/sdk/eeg_channel_info.cpp",

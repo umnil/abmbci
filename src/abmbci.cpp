@@ -1,16 +1,18 @@
 #define UNICODE
 #define NOMINMAX 1
 #include <windows.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 #undef UNICODE
 #include "AbmSdkInclude.h"
 
 #include <iostream>
 
+#include "headset/abmheadset.hpp"
 #include "sdk/callbacks.hpp"
 #include "sdk/channel_info.hpp"
 #include "sdk/device_info.hpp"
@@ -113,6 +115,12 @@ PYBIND11_MODULE(abmbciext, m) {
 	  .def_readwrite("total_samples_received", &_STATUS_INFO::nTotalSamplesReceived)
 	  .def_readwrite("online_imp_status", &_STATUS_INFO::OnLineImpStatus)
 	  .def_property("online_imp_values", LIST_GETTER(_STATUS_INFO, OnLineImpValues, 24, int), LIST_SETTER(_STATUS_INFO, OnLineImpValues, 24, int));
+
+  py::class_<ABMHeadset>(m, "Headset")
+    .def(py::init<>())
+    .def("init", &ABMHeadset::init, py::arg("log_path") = "")
+    .def("get_battery_percentage", &ABMHeadset::get_battery_percentage)
+    .def("get_impedance_values", &ABMHeadset::get_impedance_values);
 
   // =======================================================
   // Functions
