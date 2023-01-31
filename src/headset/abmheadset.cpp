@@ -93,7 +93,7 @@ std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) 
     for(int i = 0; i < data.second; i++) {
         for (std::string& s : data_keys) {
             if (retval.contains(s)) retval[s].push_back(data.first[p]);
-            else retval[s] = std::vector<float>(data.first[p]);
+            else retval[s] = std::vector<float>(1, data.first[p]);
             p++;
         }
     }
@@ -193,7 +193,7 @@ void ABMHeadset::callback_monitoring_(CHANNEL_INFO* ch, int& n) {
 
 void ABMHeadset::callback_status_info_(_STATUS_INFO* status_info) {
     std::lock_guard<std::mutex> lock(this->battery_mutex_);
-    this->battery_percentage_ = status_info->BatteryPercentage;
+    this->battery_percentage_ = static_cast<float>(status_info->BatteryPercentage);
 }
 
 int ABMHeadset::connect_(void) {
