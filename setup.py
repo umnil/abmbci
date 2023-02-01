@@ -36,7 +36,7 @@ ext_modules = [
 
 setup(
     name="abmbci",
-    version="0.1.2",
+    version="0.1.3",
     packages=find_packages(),
     setup_requires=[
         "pybind11"
