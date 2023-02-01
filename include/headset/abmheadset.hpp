@@ -10,6 +10,10 @@
 #include <vector>
 #include "sdk/sdk.hpp"
 #include "headset/state.hpp"
+#ifdef __PYBIND11__
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
+#endif  /* __PYBIND11__ */
 extern std::function<void(std::wstring const&)> devcb;
 extern std::function<void(_STATUS_INFO*)> statcb;
 extern std::function<void(ELECTRODE*, int&)> impcb;
@@ -25,6 +29,7 @@ class ABMHeadset {
     ~ABMHeadset(void);
     float get_battery_percentage(void);
     std::vector<std::string> get_data_keys(void);
+    std::vector<std::string> get_electrode_names(void);
     std::map<std::string, float> const& get_impedance_values(std::vector<std::string> electrodes = {});
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
@@ -72,7 +77,12 @@ template<class T>
 void ABMHeadset::print(std::basic_string<T> const& in) {
   std::string out(in.begin(), in.end());
   std::lock_guard<std::mutex> lock(this->cout_mutex_);
+#ifdef __PYBIND11__
+  py::gil_scoped_acquire acquire;
+  py::print(out);
+#else  /* __PYBIND11__ */
   std::cout << out << std::endl;;
+#endif  /* __PYBIND11__ */
 }
 
 template<class T> requires(std::is_integral<T>::value)
