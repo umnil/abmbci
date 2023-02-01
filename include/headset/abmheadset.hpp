@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <filesystem>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <mutex>
 #include <string>
@@ -37,8 +38,10 @@ class ABMHeadset {
     int connect_(void);
     int disconnect_(void);
     void force_idle_(void);
-    std::wostream& operator<<(std::wstring const& in);
-    std::ostream& operator<<(std::string const& in);
+    template<class T>
+    void print(std::basic_string<T> const& in);
+    template<class T> requires(std::is_integral<T>::value)
+    void print(T const* in);
     int start_acquisition_(void);
     int start_impedance_(std::vector<std::string> const& electrodes);
     int start_session_(int device = ABM_DEVICE_X24Standard, int session_type = ABM_SESSION_RAW);
@@ -63,4 +66,17 @@ class ABMHeadset {
     State state_ = State::IDLE;
     std::recursive_mutex state_mutex_;
 };
+
+
+template<class T>
+void ABMHeadset::print(std::basic_string<T> const& in) {
+  std::string out(in.begin(), in.end());
+  std::lock_guard<std::mutex> lock(this->cout_mutex_);
+  std::cout << out << std::endl;;
+}
+
+template<class T> requires(std::is_integral<T>::value)
+void ABMHeadset::print(T const* in) {
+  this->print(std::string(in));
+}
 #endif  /* INCLUDE_HEADSET_ABMHEADSET_HPP_ */

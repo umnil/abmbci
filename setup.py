@@ -23,6 +23,7 @@ ext_modules = [
         ],
         include_dirs=[sdk_inc_dir, "include"],
         define_macros=[
+            ("__PYBIND11__", "1"),
             ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
             ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
         ],
@@ -35,7 +36,7 @@ ext_modules = [
 
 setup(
     name="abmbci",
-    version="0.1.1",
+    version="0.1.2",
     packages=find_packages(),
     setup_requires=[
         "pybind11"
