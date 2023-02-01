@@ -61,7 +61,24 @@ std::vector<std::string> ABMHeadset::get_data_keys(void) {
     return data_keys;
 }
 
+std::vector<std::string> ABMHeadset::get_electrode_names(void) {
+    this->start_session_();
+    if (this->electrode_names_.size() != this->num_channels_) {
+        _CHANNELMAP_INFO channel_map;
+        if (!GetChannelMapInfo(channel_map)) {
+            this->print("Failed to get channel data");
+            return this->electrode_names_;
+        }
+        for (int i = 0; i < this->num_channels_; i++) {
+            if (!channel_map.stEEGChannels.bChUsed[i]) continue;
+            this->electrode_names_.emplace_back(channel_map.stEEGChannels.cChName[i]);
+        }
+    }
+    return this->electrode_names_;
+}
+
 std::map<std::string, float>const & ABMHeadset::get_impedance_values(std::vector<std::string> electrodes) {
+    py::gil_scoped_release release;
     // Check electrodes requested
     if (electrodes.size() == 0) {
         std::lock_guard<std::mutex> lock(this->prev_impedance_mutex_);
@@ -229,6 +246,7 @@ int ABMHeadset::connect_(void) {
     if (this->device_name_.empty()) {
         std::wstring wdevicename = device_info->chDeviceName;
         this->device_name_.assign(wdevicename.begin(), wdevicename.end());
+        this->num_channels_ = device_info->nNumberOfChannel;
     }
     this->connected_ = true;
     return 1;
