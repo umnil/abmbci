@@ -62,6 +62,7 @@ std::vector<std::string> ABMHeadset::get_data_keys(void) {
 }
 
 std::vector<std::string> ABMHeadset::get_electrode_names(void) {
+    py::gil_scoped_release release;
     this->start_session_();
     if (this->electrode_names_.size() != this->num_channels_) {
         _CHANNELMAP_INFO channel_map;
