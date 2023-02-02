@@ -5,3 +5,5 @@ build/
 dist/
 .vscode/
 **/*/__pycache__
+CMakeSettings.json
+.*.csv

@@ -225,6 +225,15 @@ int ABMHeadset::init(std::filesystem::path log_path) {
     return 0;
 }
 
+bool ABMHeadset::set_destination_file(std::filesystem::path const& destination_file) {
+    this->destination_file_ = destination_file;
+	this->destination_file_.make_preferred();
+	bool is_directory = this->destination_file_.extension().empty();
+	if (is_directory) return false;
+	std::filesystem::create_directories(this->destination_file_.parent_path());
+    return SetDestinationFile(this->destination_file_.wstring().data());
+}
+
 void ABMHeadset::callback_device_info_(std::wstring const& message) {
     this->print(std::wstring(L"Device Message: ") + message);
 }

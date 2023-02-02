@@ -35,6 +35,7 @@ class ABMHeadset {
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
     int init(std::filesystem::path log_path = "");
+    bool set_destination_file(std::filesystem::path const& destination_pth = "");
   private:
     void callback_device_info_(std::wstring const&);
     void callback_electrode_impedance_(std::string const& channel, float const& impedance);
@@ -60,6 +61,7 @@ class ABMHeadset {
     std::mutex connected_mutex_;
     bool connected_ = false;
     std::mutex cout_mutex_;
+    std::filesystem::path destination_file_;
     std::string device_name_;
     std::vector<std::string> electrode_names_;
     bool initialized_ = false;
