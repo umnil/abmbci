@@ -122,7 +122,8 @@ PYBIND11_MODULE(abmbciext, m) {
     .def("get_battery_percentage", &ABMHeadset::get_battery_percentage)
     .def("get_electrode_names", &ABMHeadset::get_electrode_names)
     .def("get_impedance_values", &ABMHeadset::get_impedance_values)
-    .def("get_technical_data", &ABMHeadset::get_technical_data);
+    .def("get_technical_data", &ABMHeadset::get_technical_data)
+    .def("set_destination_file", &ABMHeadset::set_destination_file);
 
   // =======================================================
   // Functions
