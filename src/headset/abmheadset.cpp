@@ -62,7 +62,9 @@ std::vector<std::string> ABMHeadset::get_data_keys(void) {
 }
 
 std::vector<std::string> ABMHeadset::get_electrode_names(void) {
+#ifdef __PYBIND11__
     py::gil_scoped_release release;
+#endif  /* __PYBIND11__ */
     this->start_session_();
     if (this->electrode_names_.size() != this->num_channels_) {
         _CHANNELMAP_INFO channel_map;
@@ -79,7 +81,9 @@ std::vector<std::string> ABMHeadset::get_electrode_names(void) {
 }
 
 std::map<std::string, float>const & ABMHeadset::get_impedance_values(std::vector<std::string> electrodes) {
+#ifdef __PYBIND11__
     py::gil_scoped_release release;
+#endif  /* __PYBIND11__ */
     // Check electrodes requested
     if (electrodes.size() == 0) {
         std::lock_guard<std::mutex> lock(this->prev_impedance_mutex_);
@@ -100,6 +104,29 @@ std::map<std::string, float>const & ABMHeadset::get_impedance_values(std::vector
     }
     std::lock_guard<std::mutex> lock(this->prev_impedance_mutex_);
     return this->prev_impedance_;
+}
+
+std::map<std::string, bool>const& ABMHeadset::get_technical_data(void) {
+#ifdef __PYBIND11__
+    py::gil_scoped_release release;
+#endif  /* __PYBIND11__ */
+    {
+        std::unique_lock<std::recursive_mutex> lock(this->state_mutex_);
+        if (this->state_ != State::TECHNICAL) {
+            if (!this->state_ != State::IDLE) this->force_idle_();
+            lock.unlock();
+            this->print("Starting technical check");
+            if (this->start_technical_() != -1) {
+                lock.lock();
+                this->prev_monitoring_cv_.wait(lock, [&]{return this->state_ == State::IDLE;});
+            }
+            else {
+                this->print("Failed to start technical check");
+            }
+        }
+    }
+    std::lock_guard<std::mutex> lock(this->prev_monitoring_mutex_);
+    return this->prev_monitoring_;
 }
 
 std::pair<float*, int> ABMHeadset::get_raw_data(void) {
@@ -221,7 +248,7 @@ void ABMHeadset::callback_impedance_finished_(ELECTRODE* pEl, int& i) {
 
 void ABMHeadset::callback_monitoring_(CHANNEL_INFO* ch, int& n) {
     std::lock_guard<std::mutex> lock(this->prev_monitoring_mutex_);
-    for (int i = 0; i < n; ch++) {
+    for (int i = 0; i < n; ch++, i++) {
         std::wstring wchname = ch->chName;
         std::string chname(wchname.begin(), wchname.end());
         this->prev_monitoring_[chname] = ch->bTechnicalInfo;
@@ -230,6 +257,8 @@ void ABMHeadset::callback_monitoring_(CHANNEL_INFO* ch, int& n) {
         std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
         this->state_ = State::IDLE;
     }
+    this->disconnect_();
+    this->prev_monitoring_cv_.notify_all();
 }
 
 void ABMHeadset::callback_status_info_(_STATUS_INFO* status_info) {
@@ -343,7 +372,7 @@ int ABMHeadset::start_session_(int device, int session_type) {
 int ABMHeadset::start_technical_(void) {
     std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
     if (this->state_ != State::IDLE) return -1;
-    if (this->start_session_() != 1) return -1;
+    if (this->start_session_(1, 1) != 1) return -1;
     if (TechnicalMonitoring(&techcb_trampoline, 15, NULL) != TM_STARTED_OK) return -1;
     this->state_ = State::TECHNICAL;
     return 0;
