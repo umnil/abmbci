@@ -31,6 +31,7 @@ class ABMHeadset {
     std::vector<std::string> get_data_keys(void);
     std::vector<std::string> get_electrode_names(void);
     std::map<std::string, float> const& get_impedance_values(std::vector<std::string> electrodes = {});
+    std::map<std::string, bool> const& get_technical_data(void);
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
     int init(std::filesystem::path log_path = "");
@@ -67,6 +68,7 @@ class ABMHeadset {
     std::condition_variable_any prev_impedance_cv_;
     std::mutex prev_impedance_mutex_;
     std::map<std::string, bool> prev_monitoring_;
+    std::condition_variable_any prev_monitoring_cv_;
     std::mutex prev_monitoring_mutex_;
     State state_ = State::IDLE;
     std::recursive_mutex state_mutex_;
