@@ -21,12 +21,22 @@ int WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCmdShow)
         return 1;
     }
 
+    std::filesystem::path dest_file = "..\\dest\\test.ebs";
+    if (!headset.set_destination_file(dest_file)) {
+        std::cout << "Failed to set destination file" << std::endl;
+        return 1;
+    }
+    
     std::cout << "Checking impedance" << std::endl;
     std::map<std::string, float> imp = headset.get_impedance_values({
         "C4",
         "C3",
         "Cz"
     });
+    if (imp.size() < 1) {
+        std::cout << "Failed to get impedance values" << std::endl;
+        return 1;
+    }
     for (std::pair<std::string, float> p : imp) {
         std::cout << "Electrode " << p.first << ": " << p.second << "Ω" << std::endl;
     }
