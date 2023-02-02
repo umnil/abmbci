@@ -227,6 +227,9 @@ int ABMHeadset::init(std::filesystem::path log_path) {
 
 bool ABMHeadset::set_destination_file(std::filesystem::path const& destination_file) {
     this->destination_file_ = destination_file;
+	bool is_directory = destination_file.extension().empty();
+	if (is_directory) return false;
+	std::filesystem::create_directories(destination_file.parent_path());
     return SetDestinationFile(destination_file.wstring().data());
 }
 
