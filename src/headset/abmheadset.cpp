@@ -106,6 +106,11 @@ std::map<std::string, float>const & ABMHeadset::get_impedance_values(std::vector
     return this->prev_impedance_;
 }
 
+int const ABMHeadset::get_state(void) {
+    std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
+    return this->state_;
+}
+
 std::map<std::string, bool>const& ABMHeadset::get_technical_data(void) {
 #ifdef __PYBIND11__
     py::gil_scoped_release release;
@@ -139,8 +144,9 @@ std::pair<float*, int> ABMHeadset::get_raw_data(void) {
         }
     }
     int n = 1;
-    float* data = GetRawData(n);
-    return {data, n};
+    return {NULL, 0};
+    // float* data = GetRawData(n);
+    // return {data, n};
 }
 
 std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) {
@@ -157,6 +163,18 @@ std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) 
     }
     return retval;
 }
+
+#ifdef __PYBIND11__
+py::array_t<float> ABMHeadset::get_raw_npdata(void) {
+    std::pair<float*, int> data = this->get_raw_data();
+    int n_cols = this->num_channels_ + 6;
+    return py::array_t<float>(
+        { data.second, n_cols },
+        { sizeof(float) * n_cols, sizeof(float) },
+        data.first
+    );
+}
+#endif /* __PYBIND11__ */
 
 int ABMHeadset::init(std::filesystem::path log_path) {
 #ifdef __PYBIND11__

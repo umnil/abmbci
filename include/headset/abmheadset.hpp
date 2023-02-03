@@ -12,6 +12,7 @@
 #include "headset/state.hpp"
 #ifdef __PYBIND11__
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 namespace py = pybind11;
 #endif  /* __PYBIND11__ */
 extern std::function<void(std::wstring const&)> devcb;
@@ -31,9 +32,13 @@ class ABMHeadset {
     std::vector<std::string> get_data_keys(void);
     std::vector<std::string> get_electrode_names(void);
     std::map<std::string, float> const& get_impedance_values(std::vector<std::string> electrodes = {});
+    int const get_state(void);
     std::map<std::string, bool> const& get_technical_data(void);
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
+#ifdef __PYBIND11__
+    py::array_t<float> get_raw_npdata(void);
+#endif /* __PYBIND11__ */
     int init(std::filesystem::path log_path = "");
     bool set_destination_file(std::filesystem::path const& destination_pth = "");
   private:
