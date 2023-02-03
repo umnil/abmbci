@@ -1,22 +1,24 @@
 #define UNICODE
 #define NOMINMAX 1
 #include <windows.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 #undef UNICODE
 #include "AbmSdkInclude.h"
 
 #include <iostream>
 
-#include "callbacks.hpp"
-#include "channel_info.hpp"
-#include "device_info.hpp"
-#include "eeg_channel_info.hpp"
-#include "electrodes_info.hpp"
-#include "logging.hpp"
+#include "headset/abmheadset.hpp"
+#include "sdk/callbacks.hpp"
+#include "sdk/channel_info.hpp"
+#include "sdk/device_info.hpp"
+#include "sdk/eeg_channel_info.hpp"
+#include "sdk/electrodes_info.hpp"
+#include "sdk/logging.hpp"
 
 
 namespace py = pybind11;
@@ -24,7 +26,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(abmbciext, m) {
   m.doc() = "Advanced Brain Monitoring B-Alert Python SDK";
 
-  m.def("get_sdk_dir", [](){ return ABMSDK; });
+  m.def("get_sdk_dir", [](){ return __ABMSDK__; });
 
   // =======================================================
   // CLASSES
@@ -114,6 +116,15 @@ PYBIND11_MODULE(abmbciext, m) {
 	  .def_readwrite("online_imp_status", &_STATUS_INFO::OnLineImpStatus)
 	  .def_property("online_imp_values", LIST_GETTER(_STATUS_INFO, OnLineImpValues, 24, int), LIST_SETTER(_STATUS_INFO, OnLineImpValues, 24, int));
 
+  py::class_<ABMHeadset>(m, "Headset")
+    .def(py::init<>())
+    .def("init", &ABMHeadset::init, py::arg("log_path") = "")
+    .def("get_battery_percentage", &ABMHeadset::get_battery_percentage)
+    .def("get_electrode_names", &ABMHeadset::get_electrode_names)
+    .def("get_impedance_values", &ABMHeadset::get_impedance_values)
+    .def("get_technical_data", &ABMHeadset::get_technical_data)
+    .def("set_destination_file", &ABMHeadset::set_destination_file);
+
   // =======================================================
   // Functions
   // =======================================================
@@ -143,7 +154,7 @@ PYBIND11_MODULE(abmbciext, m) {
       }
       return SetConfigPath(path.data()); 
     },
-    py::arg("path") = CONFIG
+    py::arg("path") = __CONFIG__
   );
 
   m.def(

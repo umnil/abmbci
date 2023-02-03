@@ -1,2 +1,9 @@
 .DS_Store
-/build
+build/
+*.egg-info/
+*.tar.gz
+dist/
+.vscode/
+**/*/__pycache__
+CMakeSettings.json
+.*.csv

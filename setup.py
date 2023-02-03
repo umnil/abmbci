@@ -14,16 +14,18 @@ ext_modules = [
     Pybind11Extension(
         "abmbciext",
         [
-            "src/callbacks.cpp",
-            "src/device_info.cpp",
-            "src/eeg_channel_info.cpp",
-            "src/logging.cpp",
+            "src/headset/abmheadset.cpp",
+            "src/sdk/callbacks.cpp",
+            "src/sdk/device_info.cpp",
+            "src/sdk/eeg_channel_info.cpp",
+            "src/sdk/logging.cpp",
             "src/abmbci.cpp"
         ],
         include_dirs=[sdk_inc_dir, "include"],
         define_macros=[
-            ("ABMSDK", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
-            ("CONFIG", 'L"' + config_dir.replace("\\", "\\\\") + '"')
+            ("__PYBIND11__", "1"),
+            ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
+            ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
         ],
         extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
         extra_linker_args=["/DEBUG"],
@@ -34,8 +36,9 @@ ext_modules = [
 
 setup(
     name="abmbci",
+    version="0.1.5",
     packages=find_packages(),
-    install_requires=[
+    setup_requires=[
         "pybind11"
     ],
     data_files=[

@@ -3,12 +3,17 @@
 #include <condition_variable>
 #include <filesystem>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <mutex>
 #include <string>
 #include <vector>
 #include "sdk/sdk.hpp"
 #include "headset/state.hpp"
+#ifdef __PYBIND11__
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
+#endif  /* __PYBIND11__ */
 extern std::function<void(std::wstring const&)> devcb;
 extern std::function<void(_STATUS_INFO*)> statcb;
 extern std::function<void(ELECTRODE*, int&)> impcb;
@@ -24,10 +29,13 @@ class ABMHeadset {
     ~ABMHeadset(void);
     float get_battery_percentage(void);
     std::vector<std::string> get_data_keys(void);
+    std::vector<std::string> get_electrode_names(void);
     std::map<std::string, float> const& get_impedance_values(std::vector<std::string> electrodes = {});
+    std::map<std::string, bool> const& get_technical_data(void);
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
-    int init(std::filesystem::path log_path);
+    int init(std::filesystem::path log_path = "");
+    bool set_destination_file(std::filesystem::path const& destination_pth = "");
   private:
     void callback_device_info_(std::wstring const&);
     void callback_electrode_impedance_(std::string const& channel, float const& impedance);
@@ -37,8 +45,10 @@ class ABMHeadset {
     int connect_(void);
     int disconnect_(void);
     void force_idle_(void);
-    std::wostream& operator<<(std::wstring const& in);
-    std::ostream& operator<<(std::string const& in);
+    template<class T>
+    void print(std::basic_string<T> const& in);
+    template<class T> requires(std::is_integral<T>::value)
+    void print(T const* in);
     int start_acquisition_(void);
     int start_impedance_(std::vector<std::string> const& electrodes);
     int start_session_(int device = ABM_DEVICE_X24Standard, int session_type = ABM_SESSION_RAW);
@@ -51,6 +61,7 @@ class ABMHeadset {
     std::mutex connected_mutex_;
     bool connected_ = false;
     std::mutex cout_mutex_;
+    std::filesystem::path destination_file_;
     std::string device_name_;
     std::vector<std::string> electrode_names_;
     bool initialized_ = false;
@@ -59,8 +70,27 @@ class ABMHeadset {
     std::condition_variable_any prev_impedance_cv_;
     std::mutex prev_impedance_mutex_;
     std::map<std::string, bool> prev_monitoring_;
+    std::condition_variable_any prev_monitoring_cv_;
     std::mutex prev_monitoring_mutex_;
     State state_ = State::IDLE;
     std::recursive_mutex state_mutex_;
 };
+
+
+template<class T>
+void ABMHeadset::print(std::basic_string<T> const& in) {
+  std::string out(in.begin(), in.end());
+  std::lock_guard<std::mutex> lock(this->cout_mutex_);
+#ifdef __PYBIND11__
+  py::gil_scoped_acquire acquire;
+  py::print(out);
+#else  /* __PYBIND11__ */
+  std::cout << out << std::endl;;
+#endif  /* __PYBIND11__ */
+}
+
+template<class T> requires(std::is_integral<T>::value)
+void ABMHeadset::print(T const* in) {
+  this->print(std::string(in));
+}
 #endif  /* INCLUDE_HEADSET_ABMHEADSET_HPP_ */
