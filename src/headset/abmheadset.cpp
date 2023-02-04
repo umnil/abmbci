@@ -9,6 +9,7 @@
 #include <mutex>
 #include <thread>
 #include "headset/abmheadset.hpp"
+#include "headset/hwresult.hpp"
 #include "sdk/sdk.hpp"
 
 #ifdef __PYBIND11__
@@ -44,8 +45,8 @@ void __stdcall techcb_trampoline(CHANNEL_INFO* ch, int& n) {
 }
 
 ABMHeadset::~ABMHeadset(void) {
-    if (!this->initialized_) return;
-    if (this->connected_) {
+    std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
+    if (this->state_ != State::DISCONNECTED) {
         this->disconnect_();
     }
 }
@@ -62,9 +63,6 @@ std::vector<std::string> ABMHeadset::get_data_keys(void) {
 }
 
 std::vector<std::string> ABMHeadset::get_electrode_names(void) {
-#ifdef __PYBIND11__
-    py::gil_scoped_release release;
-#endif  /* __PYBIND11__ */
     this->start_session_();
     if (this->electrode_names_.size() != this->num_channels_) {
         _CHANNELMAP_INFO channel_map;
@@ -81,9 +79,6 @@ std::vector<std::string> ABMHeadset::get_electrode_names(void) {
 }
 
 std::map<std::string, float>const & ABMHeadset::get_impedance_values(std::vector<std::string> electrodes) {
-#ifdef __PYBIND11__
-    py::gil_scoped_release release;
-#endif  /* __PYBIND11__ */
     // Check electrodes requested
     if (electrodes.size() == 0) {
         std::lock_guard<std::mutex> lock(this->prev_impedance_mutex_);
@@ -91,38 +86,42 @@ std::map<std::string, float>const & ABMHeadset::get_impedance_values(std::vector
     }
     // Check state
     {
+#ifdef __PYBIND11__
+        py::gil_scoped_release release;
+#endif  /* __PYBIND11__ */
         std::unique_lock<std::recursive_mutex> lock(this->state_mutex_);
         if (this->state_ != State::IMPEDANCE) {
-            if (!this->state_ != State::IDLE) this->force_idle_();
-            lock.unlock();
-            this->print("Starting impedance check");
-            if (this->start_impedance_(electrodes) != -1) {
-                lock.lock();
-                this->prev_impedance_cv_.wait(lock, [&]{return this->state_ == State::IDLE;});
+            HWResult ret = this->start_impedance_(electrodes);
+            if (ret != HWResult::Success) {
+                this->print(std::string("Failed to start impedance check: ") + std::to_string(ret));
+                return std::map<std::string, float>();
             }
+            this->prev_impedance_cv_.wait(lock, [&]{return this->state_ <= State::IDLE;});
         }
     }
     std::lock_guard<std::mutex> lock(this->prev_impedance_mutex_);
     return this->prev_impedance_;
 }
 
+int const ABMHeadset::get_state(void) {
+    std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
+    return this->state_;
+}
+
 std::map<std::string, bool>const& ABMHeadset::get_technical_data(void) {
-#ifdef __PYBIND11__
-    py::gil_scoped_release release;
-#endif  /* __PYBIND11__ */
     {
+#ifdef __PYBIND11__
+        py::gil_scoped_release release;
+#endif  /* __PYBIND11__ */
         std::unique_lock<std::recursive_mutex> lock(this->state_mutex_);
         if (this->state_ != State::TECHNICAL) {
-            if (!this->state_ != State::IDLE) this->force_idle_();
-            lock.unlock();
             this->print("Starting technical check");
-            if (this->start_technical_() != -1) {
-                lock.lock();
-                this->prev_monitoring_cv_.wait(lock, [&]{return this->state_ == State::IDLE;});
+            HWResult ret = this->start_technical_();
+            if (ret != HWResult::Success) {
+                this->print(std::string("Failed to start technical check: ") + std::to_string(ret));
+                return std::map<std::string, bool>();
             }
-            else {
-                this->print("Failed to start technical check");
-            }
+            this->prev_monitoring_cv_.wait(lock, [&]{return this->state_ <= State::IDLE;});
         }
     }
     std::lock_guard<std::mutex> lock(this->prev_monitoring_mutex_);
@@ -132,9 +131,12 @@ std::map<std::string, bool>const& ABMHeadset::get_technical_data(void) {
 std::pair<float*, int> ABMHeadset::get_raw_data(void) {
     std::unique_lock<std::recursive_mutex> lock(this->state_mutex_);
     if (this->state_ != State::ACQUISITION) {
-        if (this->state_ != State::IDLE) this->force_idle_();
-        if (this->start_acquisition_() == -1) {
-            this->print("Failed to start acquisition");
+#ifdef __PYBIND11__
+        py::gil_scoped_release release;
+#endif  /* __PYBIND11__ */
+        HWResult ret = this->start_acquisition_();
+        if (ret != HWResult::Success) {
+            this->print(std::string("Failed to start acquisition: ") + std::to_string(ret));
             return {NULL, 0};
         }
     }
@@ -157,6 +159,18 @@ std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) 
     }
     return retval;
 }
+
+#ifdef __PYBIND11__
+py::array_t<float> ABMHeadset::get_raw_npdata(void) {
+    std::pair<float*, int> data = this->get_raw_data();
+    int n_cols = this->num_channels_ + 6;
+    return py::array_t<float>(
+        { data.second, n_cols },
+        { sizeof(float) * n_cols, sizeof(float) },
+        data.first
+    );
+}
+#endif /* __PYBIND11__ */
 
 int ABMHeadset::init(std::filesystem::path log_path) {
 #ifdef __PYBIND11__
@@ -211,17 +225,19 @@ int ABMHeadset::init(std::filesystem::path log_path) {
     int result = SetConfigPath(config_path.wstring().data());
     if (result != 1) {
         this->print("Failed to set config path");
-        this->disconnect_();
         return 5;
     }
 
     // Connect to the device
-    if (!this->connect_()) {
-        this->print("Failed to connect to the device");
+    HWResult ret = this->connect_();
+    if (ret != HWResult::Success) {
+        this->print(
+            std::string("Failed to connect to the device")
+            + std::to_string(ret)
+        );
         return 6;
     }
 
-    this->initialized_ = true;
     return 0;
 }
 
@@ -244,13 +260,12 @@ void ABMHeadset::callback_electrode_impedance_(std::string const& channel, float
 }
 
 void ABMHeadset::callback_impedance_finished_(ELECTRODE* pEl, int& i) {
+#ifdef __PYBIND11__
+    py::gil_scoped_acquire acquire;
+#endif  /* __PYBIND11__ */
     std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
     this->print("Impedance is finished");
     if (this->state_ == State::IMPEDANCE) this->state_ = State::IDLE;
-    {
-        std::lock_guard<std::mutex> lock(this->connected_mutex_);
-
-    }
     this->disconnect_();
     this->prev_impedance_cv_.notify_all();
 }
@@ -275,47 +290,33 @@ void ABMHeadset::callback_status_info_(_STATUS_INFO* status_info) {
     this->battery_percentage_ = static_cast<float>(status_info->BatteryPercentage);
 }
 
-int ABMHeadset::connect_(void) {
-    std::lock_guard<std::mutex> lock(this->connected_mutex_);
-    if (this->connected_) return 2;
+HWResult ABMHeadset::connect_(void) {
+    std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
+    if (this->state_ > State::DISCONNECTED) return HWResult::Success;
     _DEVICE_INFO* device_info = GetDeviceInfoKeepConnection(NULL);
-    if (device_info == nullptr) {
-        return 0;
-    }
+    if (device_info == nullptr) return HWResult::EConnection;
     if (this->device_name_.empty()) {
         std::wstring wdevicename = device_info->chDeviceName;
         this->device_name_.assign(wdevicename.begin(), wdevicename.end());
         this->num_channels_ = device_info->nNumberOfChannel;
     }
-    this->connected_ = true;
-    return 1;
+    this->state_ = State::IDLE;
+    return HWResult::Success;
 }
 
 int ABMHeadset::disconnect_(void) {
     std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
-    if (!this->connected_) return 0;
-    int ret = 0;
-    switch (this->state_) {
-        case State::ACQUISITION:
-            ret = StopAcquisitionKeepConnection();
-            break;
-        case State::IMPEDANCE:
-            ret = StopImpedance();
-            break;
-        case State::TECHNICAL:
-            ret = StopTechnicalMonitoring();
-            break;
-    }
-    std::lock_guard<std::mutex> conn_lock(this->connected_mutex_);
+    if (this->state_ == State::DISCONNECTED) return 0;
+    if (this->state_ > State::IDLE) this->force_idle_();
     CloseCurrentConnection();
-    this->connected_ = false;
+    this->state_ = State::DISCONNECTED;
     this->print("Disconnected");
-    return ret;
+    return 0;
 }
 
 void ABMHeadset::force_idle_(void) {
     std::unique_lock<std::recursive_mutex> lock(this->state_mutex_);
-    if (this->state_ == State::IDLE) return;
+    if (this->state_ <= State::IDLE) return;
     this->print("Forcing Idle State");
     switch (this->state_) {
         case State::ACQUISITION:
@@ -334,57 +335,73 @@ void ABMHeadset::force_idle_(void) {
             this->stop_impedance_();
             break;
     }
+    this->state_ = State::IDLE;
     return;
 }
 
-int ABMHeadset::start_acquisition_(void) {
-    this->print("Acquisition func");
+HWResult ABMHeadset::start_acquisition_(void) {
     std::unique_lock<std::recursive_mutex> lock(this->state_mutex_);
-    this->print("Checking Idle");
-    if (this->state_ != State::IDLE) return -1;
-    this->print("Checking start session");
-    if (this->start_session_() != INIT_SESSION_OK) return -1;
-    // Getl electrode names
+    // Get electrode names
     if (this->electrode_names_.size() == 0) this->get_electrode_names();
-    this->print("Checking start acquisition");
-    if (StartAcquisitionForCurrentConnection() != ACQ_STARTED_OK) return -1;
-    this->print("Started Acquisition!");
+
+    HWResult ret = this->start_session_();
+    if (ret != HWResult::Success) return ret;
+    
+    int status = StartAcquisitionForCurrentConnection();
+    if (status != ACQ_STARTED_OK) {
+        if (status == ACQ_STARTED_NO) return HWResult::EFailed;
+        else HWResult::EBadSeq;
+    }
     this->state_ = State::ACQUISITION;
-    return 0;
+    return HWResult::Success;
 }
 
-int ABMHeadset::start_impedance_(std::vector<std::string> const& electrodes) {
+HWResult ABMHeadset::start_impedance_(std::vector<std::string> const& electrodes) {
     std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
-    if (this->state_ != State::IDLE) return -1;
-    if (this->start_session_() != 1) return -1;
+    HWResult ret = this->start_session_();
+    if (ret != HWResult::Success) return ret;
     
     std::vector<std::wstring> welectrodes;
     for (std::string const& s : electrodes) { welectrodes.emplace_back(s.begin(), s.end()); }
     std::vector<TCHAR*> electrode_names;
     for (std::wstring& w : welectrodes) { electrode_names.push_back(w.data()); }
-    if (CheckSelectedImpedancesForCurrentConnection(impcb_trampoline, electrode_names.data(), electrode_names.size(), 0) != IMP_STARTED_OK) {
-        return -1;
+    int status = CheckSelectedImpedancesForCurrentConnection(impcb_trampoline, electrode_names.data(), electrode_names.size(), 0);
+    if (status != IMP_STARTED_OK) {
+        if (status == IMP_STARTED_NO) return HWResult::EFailed;
+        else HWResult::EBadSeq;
     }
     this->state_ = State::IMPEDANCE;
-    return 0;
+    return HWResult::Success;
 }
 
-int ABMHeadset::start_session_(int device, int session_type) {
-    if (!this->connect_()) {
-        this->print("Failed to connect");
-        return -1;
-    }
-    int retval = InitSessionForCurrentConnection(device, session_type, -1, false);
-    return retval;
-}
-
-int ABMHeadset::start_technical_(void) {
+HWResult ABMHeadset::start_session_(int device, int session_type) {
     std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
-    if (this->state_ != State::IDLE) return -1;
-    if (this->start_session_(1, 1) != 1) return -1;
-    if (TechnicalMonitoring(&techcb_trampoline, 15, NULL) != TM_STARTED_OK) return -1;
+    if (this->state_ == State::INITIALIZED) return HWResult::Success;
+    if (this->state_ != State::IDLE) {
+        if (this->connect_() != HWResult::Success) return HWResult::EConnection;
+        this->force_idle_();
+    }
+    int ret = InitSessionForCurrentConnection(device, session_type, -1, false);
+    if (ret != INIT_SESSION_OK) {
+        if (ret == INIT_SESSION_NO) return HWResult::EFailed;
+        else return HWResult::EBadSeq;
+    }
+    this->state_ = State::INITIALIZED;
+    this->print("Session started");
+    return HWResult::Success;
+}
+
+HWResult ABMHeadset::start_technical_(void) {
+    std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
+    HWResult ret = this->start_session_(1, 1);
+    if (ret != HWResult::Success) return ret;
+    int status = TechnicalMonitoring(&techcb_trampoline, 15, NULL);
+    if (status != TM_STARTED_OK) {
+        if (status == TM_STARTED_NO) return HWResult::EFailed;
+        else return HWResult::EBadSeq;
+    }
     this->state_ = State::TECHNICAL;
-    return 0;
+    return HWResult::Success;
 }
 
 void ABMHeadset::stop_acquisition_(void) {
