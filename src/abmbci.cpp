@@ -120,10 +120,12 @@ PYBIND11_MODULE(abmbciext, m) {
     .def(py::init<>())
     .def("init", &ABMHeadset::init, py::arg("log_path") = "")
     .def("get_battery_percentage", &ABMHeadset::get_battery_percentage)
+    .def("set_destination_file", &ABMHeadset::set_destination_file)
     .def("get_electrode_names", &ABMHeadset::get_electrode_names)
     .def("get_impedance_values", &ABMHeadset::get_impedance_values)
-    .def("get_technical_data", &ABMHeadset::get_technical_data)
-    .def("set_destination_file", &ABMHeadset::set_destination_file);
+    .def("get_raw_data", &ABMHeadset::get_raw_npdata)
+    .def("get_state", &ABMHeadset::get_state)
+    .def("get_technical_data", &ABMHeadset::get_technical_data);
 
   // =======================================================
   // Functions
