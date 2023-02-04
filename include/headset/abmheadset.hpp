@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include "sdk/sdk.hpp"
+#include "headset/hwresult.hpp"
 #include "headset/state.hpp"
 #ifdef __PYBIND11__
 #include <pybind11/pybind11.h>
@@ -47,29 +48,26 @@ class ABMHeadset {
     void callback_impedance_finished_(ELECTRODE* pEl, int& i);
     void callback_monitoring_(CHANNEL_INFO* ch, int& n);
     void callback_status_info_(_STATUS_INFO* status_info);
-    int connect_(void);
+    HWResult connect_(void);
     int disconnect_(void);
     void force_idle_(void);
     template<class T>
     void print(std::basic_string<T> const& in);
     template<class T> requires(std::is_integral<T>::value)
     void print(T const* in);
-    int start_acquisition_(void);
-    int start_impedance_(std::vector<std::string> const& electrodes);
-    int start_session_(int device = ABM_DEVICE_X24Standard, int session_type = ABM_SESSION_RAW);
-    int start_technical_(void);
+    HWResult start_acquisition_(void);
+    HWResult start_impedance_(std::vector<std::string> const& electrodes);
+    HWResult start_session_(int device = ABM_DEVICE_X24Standard, int session_type = ABM_SESSION_RAW);
+    HWResult start_technical_(void);
     void stop_acquisition_(void);
     void stop_impedance_(void);
     void stop_technical_(void);
     std::mutex battery_mutex_;
     float battery_percentage_;
-    std::mutex connected_mutex_;
-    bool connected_ = false;
     std::mutex cout_mutex_;
     std::filesystem::path destination_file_;
     std::string device_name_;
     std::vector<std::string> electrode_names_;
-    bool initialized_ = false;
     int num_channels_ = 0;
     std::map<std::string, float> prev_impedance_;
     std::condition_variable_any prev_impedance_cv_;
@@ -77,7 +75,7 @@ class ABMHeadset {
     std::map<std::string, bool> prev_monitoring_;
     std::condition_variable_any prev_monitoring_cv_;
     std::mutex prev_monitoring_mutex_;
-    State state_ = State::IDLE;
+    State state_ = State::DISCONNECTED;
     std::recursive_mutex state_mutex_;
 };
 
