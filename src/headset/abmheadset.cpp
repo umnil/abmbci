@@ -63,8 +63,8 @@ std::vector<std::string> ABMHeadset::get_data_keys(void) {
 }
 
 std::vector<std::string> ABMHeadset::get_electrode_names(void) {
-    this->start_session_();
     if (this->electrode_names_.size() != this->num_channels_) {
+        this->start_session_();
         _CHANNELMAP_INFO channel_map;
         if (!GetChannelMapInfo(channel_map)) {
             this->print("Failed to get channel data");
