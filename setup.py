@@ -41,6 +41,9 @@ setup(
     setup_requires=[
         "pybind11"
     ],
+    install_requires=[
+        "pandas"
+    ],
     data_files=[
         (
             "lib\\site-packages\\", 
