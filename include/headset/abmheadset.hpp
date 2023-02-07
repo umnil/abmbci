@@ -38,7 +38,7 @@ class ABMHeadset {
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
 #ifdef __PYBIND11__
-    py::array_t<float> get_raw_npdata(void);
+    py::array_t<float> get_raw_npdata(bool block = false);
 #endif /* __PYBIND11__ */
     int init(std::filesystem::path log_path = "");
     bool set_destination_file(std::filesystem::path const& destination_pth = "");
