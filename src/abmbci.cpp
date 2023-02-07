@@ -125,7 +125,8 @@ PYBIND11_MODULE(abmbciext, m) {
     .def("get_impedance_values", &ABMHeadset::get_impedance_values)
     .def("get_raw_data", &ABMHeadset::get_raw_npdata)
     .def("get_state", &ABMHeadset::get_state)
-    .def("get_technical_data", &ABMHeadset::get_technical_data);
+    .def("get_technical_data", &ABMHeadset::get_technical_data)
+    .def("stop_acquisition", &ABMHeadset::stop_acquisition);
 
   // =======================================================
   // Functions
