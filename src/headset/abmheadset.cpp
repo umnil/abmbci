@@ -161,8 +161,13 @@ std::map<std::string, std::vector<float>> ABMHeadset::get_raw_data_vector(void) 
 }
 
 #ifdef __PYBIND11__
-py::array_t<float> ABMHeadset::get_raw_npdata(void) {
+py::array_t<float> ABMHeadset::get_raw_npdata(bool block) {
+  using namespace std::chrono_literals;
     std::pair<float*, int> data = this->get_raw_data();
+    while (block && data.second < 1) {
+      std::this_thread::sleep_for(40ms);
+      data = this->get_raw_data();
+    }
     int n_cols = this->num_channels_ + 6;
     return py::array_t<float>(
         { data.second, n_cols },
