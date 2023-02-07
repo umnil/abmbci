@@ -250,6 +250,10 @@ bool ABMHeadset::set_destination_file(std::filesystem::path const& destination_f
     return SetDestinationFile(this->destination_file_.wstring().data());
 }
 
+void ABMHeadset::stop_acquisition(void) {
+  this->stop_acquisition_();
+}
+
 void ABMHeadset::callback_device_info_(std::wstring const& message) {
     this->print(std::wstring(L"Device Message: ") + message);
 }

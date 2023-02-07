@@ -42,6 +42,7 @@ class ABMHeadset {
 #endif /* __PYBIND11__ */
     int init(std::filesystem::path log_path = "");
     bool set_destination_file(std::filesystem::path const& destination_pth = "");
+    void stop_acquisition(void);
   private:
     void callback_device_info_(std::wstring const&);
     void callback_electrode_impedance_(std::string const& channel, float const& impedance);
