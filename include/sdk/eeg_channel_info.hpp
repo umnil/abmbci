@@ -3,7 +3,7 @@
 #define UNICODE
 #define NOMINMAX 1
 #include <windows.h>
-#include "AbmSdkInclude.h"
+#include "sdk/sdk.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
