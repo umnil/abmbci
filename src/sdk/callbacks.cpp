@@ -1,7 +1,7 @@
 #define UNICODE
 #include <windows.h>
 #include <tchar.h>
-#include "AbmSdkInclude.h"
+#include "sdk/sdk.hpp"
 
 #include <pybind11/functional.h>
 #include <pybind11/iostream.h>
