@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "AbmSdkInclude.h"
+#include "sdk/sdk.hpp"
 
 /*
 void print_sample(float* sample, int n_channels) {

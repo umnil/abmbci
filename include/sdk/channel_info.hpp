@@ -2,7 +2,7 @@
 #define INCLUDE_CHANNEL_INFO_HPP_
 #define UNICODE
 #include <windows.h>
-#include "AbmSdkInclude.h"
+#include "sdk/sdk.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;

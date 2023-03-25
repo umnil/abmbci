@@ -1,7 +1,7 @@
 #define UNICODE
 #define NOMINMAX 1
 #include <windows.h>
-#include "AbmSdkInclude.h"
+#include "sdk/sdk.hpp"
 #include <string>
 
 std::wstring device_info_get_device_name(_DEVICE_INFO const& di) {
