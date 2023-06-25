@@ -1,4 +1,5 @@
 import os
+import sys
 
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup, find_packages
@@ -10,29 +11,46 @@ sdk_bin_dir = os.path.join(sdk_dir, "bin")
 sdk_lib_dir = os.path.join(sdk_dir, "lib")
 sdk_inc_dir = os.path.join(sdk_dir, "include")
 
-ext_modules = [
-    Pybind11Extension(
-        "abmbciext",
-        [
-            "src/headset/abmheadset.cpp",
-            "src/sdk/callbacks.cpp",
-            "src/sdk/device_info.cpp",
-            "src/sdk/eeg_channel_info.cpp",
-            "src/sdk/logging.cpp",
-            "src/abmbci.cpp"
-        ],
-        include_dirs=[sdk_inc_dir, "include"],
-        define_macros=[
-            ("__PYBIND11__", "1"),
-            ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
-            ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
-        ],
-        extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
-        extra_linker_args=["/DEBUG"],
-        library_dirs=[sdk_lib_dir],
-        libraries=["ABM_Athena"]
-    )
-]
+if sys.platform == "win32":
+    ext_modules = [
+        Pybind11Extension(
+            "abmbciext",
+            [
+                "src/headset/abmheadset.cpp",
+                "src/sdk/callbacks.cpp",
+                "src/sdk/device_info.cpp",
+                "src/sdk/eeg_channel_info.cpp",
+                "src/sdk/logging.cpp",
+                "src/abmbci.cpp"
+            ],
+            include_dirs=[sdk_inc_dir, "include"],
+            define_macros=[
+                ("__PYBIND11__", "1"),
+                ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
+                ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
+            ],
+            extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
+            extra_linker_args=["/DEBUG"],
+            library_dirs=[sdk_lib_dir],
+            libraries=["ABM_Athena"]
+        )
+    ]
+else:
+    ext_modules = [
+        Pybind11Extension(
+            "abmbciext",
+            [
+                "src/stub.cpp"
+            ],
+            include_dirs=["include"],
+            define_macros=[
+                ("__PYBIND11__", "1"),
+                ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
+                ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
+            ],
+            extra_compile_args=(["-mmacos-version-min=10.15"] if sys.platform == "darwin" else [])
+        )
+    ]
 
 setup(
     name="abmbci",
