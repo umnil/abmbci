@@ -51,6 +51,7 @@ else:
 
 setup(
     name="abmbci",
+    packages=find_packages(),
     data_files=data_files,
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext}
