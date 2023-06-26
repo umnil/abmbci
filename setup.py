@@ -12,6 +12,7 @@ sdk_lib_dir = os.path.join(sdk_dir, "lib")
 sdk_inc_dir = os.path.join(sdk_dir, "include")
 
 if sys.platform == "win32":
+    # only build on win32
     ext_modules = [
         Pybind11Extension(
             "abmbciext",
@@ -35,34 +36,7 @@ if sys.platform == "win32":
             libraries=["ABM_Athena"]
         )
     ]
-else:
-    ext_modules = [
-        Pybind11Extension(
-            "abmbciext",
-            [
-                "src/stub.cpp"
-            ],
-            include_dirs=["include"],
-            define_macros=[
-                ("__PYBIND11__", "1"),
-                ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
-                ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
-            ],
-            extra_compile_args=(["-mmacos-version-min=10.15"] if sys.platform == "darwin" else [])
-        )
-    ]
-
-setup(
-    name="abmbci",
-    version="0.1.11",
-    packages=find_packages(),
-    setup_requires=[
-        "pybind11"
-    ],
-    install_requires=[
-        "pandas"
-    ],
-    data_files=[
+    data_files = [
         (
             "lib\\site-packages\\", 
             [
@@ -70,7 +44,14 @@ setup(
                 for x in os.listdir(sdk_bin_dir)
             ]
         )
-    ],
+    ]
+else:
+    ext_modules = []
+    data_files = []
+
+setup(
+    name="abmbci",
+    data_files=data_files,
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext}
 )
