@@ -1,4 +1,5 @@
 import os
+import sys
 
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup, find_packages
@@ -10,41 +11,32 @@ sdk_bin_dir = os.path.join(sdk_dir, "bin")
 sdk_lib_dir = os.path.join(sdk_dir, "lib")
 sdk_inc_dir = os.path.join(sdk_dir, "include")
 
-ext_modules = [
-    Pybind11Extension(
-        "abmbciext",
-        [
-            "src/headset/abmheadset.cpp",
-            "src/sdk/callbacks.cpp",
-            "src/sdk/device_info.cpp",
-            "src/sdk/eeg_channel_info.cpp",
-            "src/sdk/logging.cpp",
-            "src/abmbci.cpp"
-        ],
-        include_dirs=[sdk_inc_dir, "include"],
-        define_macros=[
-            ("__PYBIND11__", "1"),
-            ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
-            ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
-        ],
-        extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
-        extra_linker_args=["/DEBUG"],
-        library_dirs=[sdk_lib_dir],
-        libraries=["ABM_Athena"]
-    )
-]
-
-setup(
-    name="abmbci",
-    version="0.1.11",
-    packages=find_packages(),
-    setup_requires=[
-        "pybind11"
-    ],
-    install_requires=[
-        "pandas"
-    ],
-    data_files=[
+if sys.platform == "win32":
+    # only build on win32
+    ext_modules = [
+        Pybind11Extension(
+            "abmbciext",
+            [
+                "src/headset/abmheadset.cpp",
+                "src/sdk/callbacks.cpp",
+                "src/sdk/device_info.cpp",
+                "src/sdk/eeg_channel_info.cpp",
+                "src/sdk/logging.cpp",
+                "src/abmbci.cpp"
+            ],
+            include_dirs=[sdk_inc_dir, "include"],
+            define_macros=[
+                ("__PYBIND11__", "1"),
+                ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
+                ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
+            ],
+            extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
+            extra_linker_args=["/DEBUG"],
+            library_dirs=[sdk_lib_dir],
+            libraries=["ABM_Athena"]
+        )
+    ]
+    data_files = [
         (
             "lib\\site-packages\\", 
             [
@@ -52,7 +44,14 @@ setup(
                 for x in os.listdir(sdk_bin_dir)
             ]
         )
-    ],
+    ]
+else:
+    ext_modules = []
+    data_files = []
+
+setup(
+    name="abmbci",
+    data_files=data_files,
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext}
 )
