@@ -78,7 +78,7 @@ class TestHeadset:
                 "Status": statuses,
             }
         )
-        impedance_fn: str = ".".join([self.file_prefix, "Imedpance", "csv"])
+        impedance_fn: str = ".".join([self.file_prefix, "Impedance", "csv"])
         impedance_fp: Path = self.dest_path / impedance_fn
         dataframe.to_csv(impedance_fp, index=False)
 
