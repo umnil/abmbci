@@ -69,7 +69,7 @@ class TestHeadset:
         electrode_names: List[str] = ["Ref"] + electrode_names
         system_time: List[str] = [now_str] * len(electrode_names)
         values: List[int] = [5] * len(electrode_names)
-        statuses: List[str] = ["Good"]
+        statuses: List[str] = ["Good"] * len(electrode_names)
         dataframe: pd.DataFrame = pd.DataFrame(
             {
                 "System Time": system_time,
