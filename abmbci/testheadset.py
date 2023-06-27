@@ -65,7 +65,7 @@ class TestHeadset:
         now: datetime = datetime.now()
         ms: int = int(now.strftime("%f"))
         ms = int(np.round(ms / 1000))
-        now_str: str = now.strftime("%H:%M%:S") + f":{ms}"
+        now_str: str = now.strftime("%H:%M:%S") + f":{ms}"
         electrode_names: List[str] = ["Ref"] + electrode_names
         system_time: List[str] = [now_str] * len(electrode_names)
         values: List[int] = [5] * len(electrode_names)
