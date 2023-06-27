@@ -60,16 +60,16 @@ class TestHeadset:
             "AUX3",
         ]
 
-    def get_impedance_values(self) -> Dict:
+    def get_impedance_values(self, electrode_names: List[str]) -> Dict:
         """This will save fake impedance data"""
         now: datetime = datetime.now()
         ms: int = int(now.strftime("%f"))
         ms = int(np.round(ms / 1000))
         now_str: str = now.strftime("%H:%M%:S") + f":{ms}"
-        electrode_names: List[str] = ["Ref"] + self.get_electrode_names()
+        electrode_names: List[str] = ["Ref"] + electrode_names
         system_time: List[str] = [now_str] * len(electrode_names)
         values: List[int] = [5] * len(electrode_names)
-        statuses: List[str] = ["Good"]
+        statuses: List[str] = ["Good"] * len(electrode_names)
         dataframe: pd.DataFrame = pd.DataFrame(
             {
                 "System Time": system_time,
