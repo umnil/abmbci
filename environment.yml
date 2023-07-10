@@ -1,10 +1,26 @@
 name: abmbci
 channels:
-  - defaults/win-32
+  - defaults
 dependencies:
-  - pip
-  - python=3.10
+  - bzip2=1.0.8=he774522_0
+  - ca-certificates=2022.4.26=h9f7ea03_0
+  - certifi=2022.6.15=py310h9f7ea03_0
+  - libffi=3.4.2=h6986bd8_4
+  - openssl=1.1.1o=hc431981_0
+  - pip=21.2.4=py310h9f7ea03_0
+  - python=3.10.4=hdf15aeb_0
+  - setuptools=61.2.0=py310h9f7ea03_0
+  - sqlite=3.38.3=hc431981_0
+  - tk=8.6.12=hc431981_0
+  - tzdata=2022g=h04d1e81_0
+  - vc=14.2=h21ff451_1
+  - vs2015_runtime=14.27.29016=h5e58377_2
+  - wheel=0.37.1=pyhd3eb1b0_0
+  - wincertstore=0.2=py310h9f7ea03_2
+  - xz=5.2.5=h559d222_1
+  - zlib=1.2.12=h3c9058a_2
   - pip:
+    - abmbci==0.0.0
     - pybind11==2.10.3
 variables:
-  ABMSDK: "C:\\ABM\\B-Alert\\SDK"
+  ABMSDK: "C:\Users\kevin\Box\Kevin Davis\Software\ABM\B-Alert Live v02.04.05.00\B-Alert Live v02.04.05.00\WinRoot\ABM\B-Alert\SDK"
