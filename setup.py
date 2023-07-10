@@ -1,15 +1,16 @@
 import os
 import sys
 
+from pathlib import Path
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup, find_packages
 
-sdk_dir = os.environ["ABMSDK"]
-system_dir = os.path.dirname(sdk_dir)
-config_dir = os.path.join(system_dir, "Config")
-sdk_bin_dir = os.path.join(sdk_dir, "bin")
-sdk_lib_dir = os.path.join(sdk_dir, "lib")
-sdk_inc_dir = os.path.join(sdk_dir, "include")
+sdk_dir = Path(os.path.relpath(os.environ["ABMSDK"]))
+system_dir = sdk_dir.parent
+config_dir = system_dir / "Config"
+sdk_bin_dir = sdk_dir / "bin"
+sdk_lib_dir = sdk_dir / "lib"
+sdk_inc_dir = sdk_dir / "include"
 
 if sys.platform == "win32":
     # only build on win32
@@ -24,15 +25,15 @@ if sys.platform == "win32":
                 "src/sdk/logging.cpp",
                 "src/abmbci.cpp"
             ],
-            include_dirs=[sdk_inc_dir, "include"],
+            include_dirs=[str(sdk_inc_dir), "include"],
             define_macros=[
                 ("__PYBIND11__", "1"),
-                ("__ABMSDK__", 'L"' + sdk_dir.replace("\\", "\\\\") + '"'),
-                ("__CONFIG__", 'L"' + config_dir.replace("\\", "\\\\") + '"')
+                ("__ABMSDK__", 'L"' + str(sdk_dir).replace("\\", "\\\\") + '"'),
+                ("__CONFIG__", 'L"' + str(config_dir).replace("\\", "\\\\") + '"')
             ],
             extra_compile_args=["/DWIN32", "/D_WINDOWS", "/DEBUG"],
             extra_linker_args=["/DEBUG"],
-            library_dirs=[sdk_lib_dir],
+            library_dirs=[str(sdk_lib_dir)],
             libraries=["ABM_Athena"]
         )
     ]
@@ -40,7 +41,7 @@ if sys.platform == "win32":
         (
             "lib\\site-packages\\", 
             [
-                os.path.join(sdk_bin_dir , x)
+                str(sdk_bin_dir / x)
                 for x in os.listdir(sdk_bin_dir)
             ]
         )
