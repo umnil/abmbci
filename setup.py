@@ -4,12 +4,12 @@ import sys
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup, find_packages
 
-sdk_dir = os.environ["ABMSDK"]
-system_dir = os.path.dirname(sdk_dir)
-config_dir = os.path.join(system_dir, "Config")
-sdk_bin_dir = os.path.join(sdk_dir, "bin")
-sdk_lib_dir = os.path.join(sdk_dir, "lib")
-sdk_inc_dir = os.path.join(sdk_dir, "include")
+sdk_dir = Path(os.environ["ABMSDK"])
+system_dir = sdk_dir.parent
+config_dir = system_dir / "Config"
+sdk_bin_dir = sdk_dir / "bin"
+sdk_lib_dir = sdk_dir / "lib"
+sdk_inc_dir = sdk_dir / "include"
 
 if sys.platform == "win32":
     # only build on win32
@@ -40,7 +40,7 @@ if sys.platform == "win32":
         (
             "lib\\site-packages\\", 
             [
-                os.path.join(sdk_bin_dir , x)
+                os.path.relpath(os.path.join(str(sdk_bin_dir) , x))
                 for x in os.listdir(sdk_bin_dir)
             ]
         )
