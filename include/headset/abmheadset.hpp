@@ -28,6 +28,7 @@ void __stdcall impelcb_trampoline(char* ch, float i);
 void __stdcall techcb_trampoline(CHANNEL_INFO* ch, int& i);
 class ABMHeadset {
   public:
+    ABMHeadset(HeadsetType headset_type = HeadsetType::X24_QEEG);
     ~ABMHeadset(void);
     float get_battery_percentage(void);
     std::vector<std::string> get_data_keys(void);
@@ -58,7 +59,7 @@ class ABMHeadset {
     void print(T const* in);
     HWResult start_acquisition_(void);
     HWResult start_impedance_(std::vector<std::string> const& electrodes);
-    HWResult start_session_(int device = ABM_DEVICE_X24Standard, int session_type = ABM_SESSION_RAW);
+    HWResult start_session_(int device = -1, int session_type = ABM_SESSION_RAW);
     HWResult start_technical_(void);
     void stop_acquisition_(void);
     void stop_impedance_(void);
@@ -67,6 +68,7 @@ class ABMHeadset {
     float battery_percentage_;
     std::mutex cout_mutex_;
     std::filesystem::path destination_file_;
+    HeadsetType headset_type_;
     std::string device_name_;
     std::vector<std::string> electrode_names_;
     int num_channels_ = 0;
