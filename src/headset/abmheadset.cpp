@@ -44,6 +44,8 @@ void __stdcall techcb_trampoline(CHANNEL_INFO* ch, int& n) {
     if (techcb) techcb(ch, n);
 }
 
+ABMHeadset::ABMHeadset(HeadsetType headset_type) : headset_type_(headset_type) {}
+
 ABMHeadset::~ABMHeadset(void) {
     std::lock_guard<std::recursive_mutex> lock(this->state_mutex_);
     if (this->state_ != State::DISCONNECTED) {
@@ -390,6 +392,7 @@ HWResult ABMHeadset::start_session_(int device, int session_type) {
         if (this->connect_() != HWResult::Success) return HWResult::EConnection;
         this->force_idle_();
     }
+    if (device == -1) device = static_cast<int>(this->headset_type_);
     int ret = InitSessionForCurrentConnection(device, session_type, -1, false);
     if (ret != INIT_SESSION_OK) {
         if (ret == INIT_SESSION_NO) return HWResult::EFailed;
