@@ -1,0 +1,11 @@
+#ifndef INCLUDE_HEADSET_TYPE_HPP_
+#define INCLUDE_HEADSET_TYPE_HPP_
+enum HeadsetType {
+  X24_QEEG = 0,
+  X24_STANDARD,
+  X10_STANDARD,
+  X24t_10_20 = 6,
+  X10t_STANDARD = 7,
+  X24t_REDUCED = 8
+};
+#endif  /* INCLUDE_HEADSET_TYPE_HPP_ */

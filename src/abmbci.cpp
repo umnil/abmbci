@@ -18,6 +18,7 @@
 #include "sdk/device_info.hpp"
 #include "sdk/eeg_channel_info.hpp"
 #include "sdk/electrodes_info.hpp"
+#include "sdk/headset_type.hpp"
 #include "sdk/logging.hpp"
 
 
@@ -193,4 +194,15 @@ PYBIND11_MODULE(abmbciext, m) {
   m.def("register_callback_impedance_electrode_finished_a", &register_callback_impedance_electrode_finished_a);
   m.def("register_callback_device_detection_info", &register_callback_device_detection_info);
   m.def("register_callback_on_status_info", &register_callback_on_status_info);
+
+  // =======================================================
+  // Enumerations
+  // =======================================================
+  py::enum_<HeadsetType>("HeadsetType")
+    .value("X24_QEEG", HeadsetType::X24_QEEG)
+    .value("X24_STANDARD", HeadsetType::X24_STANDARD)
+    .value("X10_STANDARD", HeadsetType::X10_STANDARD)
+    .value("X24t_10_20", HeadsetType::X24t_10_20)
+    .value("X10t_STANDARD", HeadsetType::X10t_STANDARD)
+    .value("X24t_REDUCED", HeadsetType::X24t_REDUCED);
 }
