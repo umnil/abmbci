@@ -1,13 +1,44 @@
 import numpy as np
 import pandas as pd  # type: ignore
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
 from typing import Dict, List
 
+class HeadsetType(Enum):
+  X24_QEEG = 0
+  X24_STANDARD = 1
+  X10_STANDARD = 2
+  X24t_10_20 = 6
+  X10t_STANDARD = 7
+  X24t_REDUCED = 8
+
+HEADSET_CHANNELS = {
+    HeadsetType.X24_QEEG: [
+        "Fp1", "F7", "F8", "T4", "T6",
+        "T5", "T3", "Fp2", "O1", "P3",
+        "Pz", "F3", "Fz", "F4", "C4",
+        "P4", "POz", "C3", "Cz", "O2",
+        "ECG", "AUX1", "AUX2", "AUX3"
+    ],
+    HeadsetType.X24_STANDARD: [
+        "F3", "F1", "Fz", "F2", "F4",
+        "C3", "C1", "Cz", "C2", "C4",
+        "CPz", "P3", "P1", "Pz", "P2",
+        "P4", "POz", "O1", "Oz", "O2",
+        "ECG", "AUX1", "AUX2", "AUX3",
+    ]
+}
 
 class TestHeadset:
-    def __init__(self) -> None:
-        """This is a mock headset for testing data collection"""
+    def __init__(self, headset_type: HeadsetType) -> None:
+        """This is a mock headset for testing data collection
+
+        Parameters
+        ----------
+        headset_type : HeadsetType
+            The type of headset to mock. Determines available channels
+        """
         self.states: List[str] = [
             "DISCONNECTED",
             "IDLE",
@@ -16,6 +47,7 @@ class TestHeadset:
             "TECHNICAL",
             "ACQUISITION",
         ]
+        self._headset_type: HeadsetType = headset_type
         self._state: str = self.states[1]
         self.sfreq: int = 256
 
@@ -33,32 +65,7 @@ class TestHeadset:
         ] + self.get_electrode_names()
 
     def get_electrode_names(self) -> List[str]:
-        return [
-            "F3",
-            "F1",
-            "Fz",
-            "F2",
-            "F4",
-            "C3",
-            "C1",
-            "Cz",
-            "C2",
-            "C4",
-            "CPz",
-            "P3",
-            "P1",
-            "Pz",
-            "P2",
-            "P4",
-            "POz",
-            "O1",
-            "Oz",
-            "O2",
-            "ECG",
-            "AUX1",
-            "AUX2",
-            "AUX3",
-        ]
+        return HEADSET_CHANNELS[self._headset_type]
 
     def get_impedance_values(self, electrode_names: List[str]) -> Dict:
         """This will save fake impedance data"""
