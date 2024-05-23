@@ -130,6 +130,13 @@ std::map<std::string, bool>const& ABMHeadset::get_technical_data(void) {
     return this->prev_monitoring_;
 }
 
+InPacket const ABMHeadset::get_third_party_data(void) {
+  int data_size = 0;
+  unsigned char * data_packet = GetThirdPartyData(&data_size);
+  InPacket packet(data_packet);
+  return packet;
+}
+
 std::pair<float*, int> ABMHeadset::get_raw_data(void) {
     std::unique_lock<std::recursive_mutex> lock(this->state_mutex_);
     if (this->state_ != State::ACQUISITION) {
