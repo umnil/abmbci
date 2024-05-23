@@ -23,7 +23,8 @@ typedef struct INPACKET {
   uint8_t flag[2];
   uint8_t counter;
   uint32_t timestamp;
-  uint8_t length;
+  uint16_t length;
+  uint8_t type;
   char data[];
 } sInPacket;
 #pragma pack(pop)
@@ -45,7 +46,7 @@ public:
 private:
   int const get_counter_(char *data);
   std::string const &get_data_(char *data);
-  std::chrono::milliseconds const &get_timestamp_(char *data);
+  std::chrono::milliseconds const get_timestamp_(char *data);
 };
 
 #endif /* INCLUDE_HEADSET_PACKET_HPP_ */

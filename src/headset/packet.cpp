@@ -1,5 +1,6 @@
 #include "headset/packet.hpp"
 #include <numeric>
+#include <iostream>
 #include <stdlib.h>
 
 OutPacket::OutPacket(std::string const &data) : data(data) {}
@@ -34,9 +35,9 @@ std::string const &InPacket::get_data_(char *data) {
   return std::move(std::string(packet->data, packet->length));
 }
 
-std::chrono::milliseconds const &InPacket::get_timestamp_(char *data) {
+std::chrono::milliseconds const InPacket::get_timestamp_(char *data) {
   sInPacket *packet = reinterpret_cast<sInPacket *>(data);
   uint32_t bet = packet->timestamp;
   uint32_t milliseconds = BYTESWAP(bet);
-  return std::move(std::chrono::milliseconds(milliseconds));
+  return std::chrono::milliseconds(milliseconds);
 }
