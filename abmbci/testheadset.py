@@ -119,6 +119,7 @@ class TestHeadset:
             and the headset with sample data from these objects
         """
         self._data_runs: List[np.ndarray] = []
+        self._all_data: Optional[np.ndarray] = None
         self._headset_type: HeadsetType = headset_type
         self._state: HeadsetState = HeadsetState.IDLE
         self.cur_time: Optional[datetime] = None
@@ -126,6 +127,13 @@ class TestHeadset:
         self.raw_runs: List[mne.io.Raw] = sample_data
         self.start_sample: int = 0
         self.start_time: Optional[datetime] = None
+
+    @property
+    def all_data(self) -> np.ndarray:
+        if self._all_data is None:
+            self._all_data = np.concatenate(self.data_runs, axis=1)
+
+        return self._all_data
 
     @property
     def cur_run(self) -> np.int32:
@@ -303,7 +311,22 @@ class TestHeadset:
 
     def sample_main_data(self, ni: int, nf: int) -> np.ndarray:
         if len(self.raw_runs) > 0:
-            return self.cur_run_data[:, ni:nf]
+            n: int = nf - ni
+            n_max: int = self.all_data.shape[-1]
+
+            # test for sampling beyond the available data
+            if nf >= n_max:
+                nf %= n_max
+                ni = nf - n
+
+            # test for rolling
+            if ni < 0:
+                temp_data: np.ndarray = np.roll(self.all_data, abs(ni), axis=-1)
+                ni -= ni
+                nf -= ni
+                return temp_data[:, ni:nf]
+
+            return self.all_data[:, ni:nf]
         else:
             n_rows: int = len(self.get_electrode_names())
             return np.random.rand(n_rows, nf - ni)
