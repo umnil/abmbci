@@ -2,10 +2,8 @@ import os
 import time
 import logging
 import threading
-import abmbci
 
 from abmbci import abm
-from datetime import datetime, timedelta
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -14,12 +12,14 @@ logging.basicConfig(level=logging.DEBUG)
 def detection_device_callback(message, i):
     print(f"Device Callback: {message}")
 
+
 def status_info_callback(status_info):
     print(f"Battery Level: %{status_info.battery_percentage}")
 
+
 def main():
     impedances = {}
-    val = input(f"HI {os.getpid()}: ")
+    # val = input(f"HI {os.getpid()}: ")
     print("Starting")
     abm.set_log_path(os.path.join(os.getcwd(), "log"))
     log_path = abm.get_log_path()
@@ -65,7 +65,9 @@ def main():
     print("Callback registered")
 
     electrode_list = ["C3", "Cz", "C4"]
-    result = abm.check_selected_impedances_for_current_connection(lambda e,i: print("Done"), electrode_list)
+    result = abm.check_selected_impedances_for_current_connection(
+        lambda e, i: print("Done"), electrode_list
+    )
     if result == 0:
         print("Impedance checking request was ignored")
     elif result == -1:
@@ -90,6 +92,7 @@ def main():
     print("Shutting down connection")
     abm.close_current_connection()
     print("Done")
+
 
 if __name__ == "__main__":
     # asyncio.run(main())
