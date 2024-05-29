@@ -1,8 +1,5 @@
-import time
 import logging
-import abmbciext as abm
-
-from datetime import datetime, timedelta
+import abmbciext as abm  # type: ignore
 
 LOGGER = logging.getLogger(name=__name__)
 
@@ -10,8 +7,8 @@ LOGGER = logging.getLogger(name=__name__)
 def single_callback(chname, imp):
     LOGGER.debug("Signle Callback!")
 
-class ABM:
 
+class ABM:
     def __init__(self):
         self.started = False
         self.impedance = {}
@@ -69,14 +66,14 @@ class ABM:
     def setup(self):
         self.set_config()
         self.init()
-        self.start()          
+        self.start()
 
     def get_data(self, n):
         return self._abm.get_raw_data(self._device_info, n)
 
     def set_imp_callback(self, callback=None):
         if callback is None:
-            callback = lambda n, i: self.impedance.update({n: i})
+            callback = lambda n, i: self.impedance.update({n: i})  # noqa: E731
         val = self._abm.register_callback_impedance_electrode_finished_a(callback)
         if val == 0:
             LOGGER.error("Failed to register callback")
