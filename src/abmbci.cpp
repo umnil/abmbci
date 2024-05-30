@@ -199,6 +199,7 @@ PYBIND11_MODULE(abmbciext, m) {
            py::arg("block") = false)
       .def("get_state", &ABMHeadset::get_state)
       .def("get_technical_data", &ABMHeadset::get_technical_data)
+      .def("get_third_party_data", &ABMHeadset::get_third_party_data)
       .def("stop_acquisition", &ABMHeadset::stop_acquisition);
 
   // =======================================================
