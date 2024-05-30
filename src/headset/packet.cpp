@@ -26,16 +26,19 @@ InPacket::InPacket(char *in_data)
       timestamp(get_timestamp_(in_data)){};
 
 int const InPacket::get_counter_(char *data) {
+  if (data == nullptr) return 0;
   sInPacket *packet = reinterpret_cast<sInPacket *>(data);
   return static_cast<int>(packet->counter);
 }
 
-std::string const &InPacket::get_data_(char *data) {
+std::string const InPacket::get_data_(char *data) {
+  if (data == nullptr) return std::string();
   sInPacket *packet = reinterpret_cast<sInPacket *>(data);
-  return std::move(std::string(packet->data, packet->length));
+  return std::string(packet->data, packet->length);
 }
 
 std::chrono::milliseconds const InPacket::get_timestamp_(char *data) {
+  if (data == nullptr) return std::chrono::milliseconds(0);
   sInPacket *packet = reinterpret_cast<sInPacket *>(data);
   uint32_t bet = packet->timestamp;
   uint32_t milliseconds = BYTESWAP(bet);
