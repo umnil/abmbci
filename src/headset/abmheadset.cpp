@@ -132,8 +132,8 @@ std::map<std::string, bool>const& ABMHeadset::get_technical_data(void) {
 
 InPacket const ABMHeadset::get_third_party_data(void) {
   int data_size = 0;
-  unsigned char * data_packet = GetThirdPartyData(&data_size);
-  InPacket packet(data_packet);
+  unsigned char * data_packet = GetThirdPartyData(data_size);
+  InPacket packet(reinterpret_cast<char*>(data_packet));
   return packet;
 }
 
