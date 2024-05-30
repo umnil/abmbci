@@ -3,6 +3,7 @@
 #include <chrono>
 #include <stdint.h>
 #include <string>
+#include <pybind11/chrono.h>
 #define HEADER_SIZE 9
 #define PNNL 1
 #define BYTE1(x) (x & 0xFF)
@@ -45,7 +46,7 @@ public:
 
 private:
   int const get_counter_(char *data);
-  std::string const &get_data_(char *data);
+  std::string const get_data_(char *data);
   std::chrono::milliseconds const get_timestamp_(char *data);
 };
 

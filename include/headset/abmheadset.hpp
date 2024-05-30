@@ -10,6 +10,7 @@
 #include <vector>
 #include "sdk/sdk.hpp"
 #include "headset/hwresult.hpp"
+#include "headset/packet.hpp"
 #include "headset/state.hpp"
 #ifdef __PYBIND11__
 #include <pybind11/pybind11.h>
