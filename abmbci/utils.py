@@ -1,6 +1,7 @@
 import os
-import pandas as pd
+import pandas as pd  # type: ignore
 from datetime import datetime
+
 
 def impedance_isoconvert(path: str) -> pd.DataFrame:
     imp_data: pd.DataFrame = pd.read_csv(path)
