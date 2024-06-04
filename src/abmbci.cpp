@@ -173,9 +173,10 @@ PYBIND11_MODULE(abmbciext, m) {
       .def_readwrite("data", &OutPacket::data); // Bind the data member
 
   py::class_<InPacket>(m, "InPacket")
-      .def(py::init<char *>())
+      .def(py::init<char *, int>())
       .def_readonly("counter", &InPacket::counter)
       .def_readonly("data", &InPacket::data)
+      .def_readonly("userdata", &InPacket::userdata)
       .def_readonly("timestamp", &InPacket::timestamp);
 
   py::enum_<HeadsetType>(m, "HeadsetType")

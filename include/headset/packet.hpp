@@ -10,7 +10,8 @@
 #define BYTE2(x) (BYTE1(x >> 8))
 #define BYTE3(x) (BYTE2(x >> 8))
 #define BYTE4(x) (BYTE3(x >> 8))
-#define BYTESWAP(x) ((BYTE1(x) << 24) | (BYTE2(x) << 16) | (BYTE3(x) << 8) | BYTE4(x))
+#define BYTESWAP16(x) ((BYTE1(x) << 8) | BYTE2(x))
+#define BYTESWAP32(x) ((BYTE1(x) << 24) | (BYTE2(x) << 16) | (BYTE3(x) << 8) | BYTE4(x))
 
 #pragma pack(push, 1)
 typedef struct OUTPACKET {
@@ -39,10 +40,11 @@ public:
 
 class InPacket {
 public:
-  InPacket(char *in_data);
+  InPacket(char *in_data, int len);
   int const counter;
-  std::string const data;
+  std::vector<uint8_t> const data;
   std::chrono::milliseconds const timestamp;
+  std::string const userdata;
 
 private:
   int const get_counter_(char *data);
