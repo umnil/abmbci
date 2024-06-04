@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "headset/abmheadset.hpp"
+#include "headset/packet.hpp"
 #include "sdk/callbacks.hpp"
 #include "sdk/channel_info.hpp"
 #include "sdk/device_info.hpp"
@@ -45,19 +46,19 @@ PYBIND11_MODULE(abmbciext, m) {
   py::class_<ELECTRODE>(m, "Electrode")
       .def_property("name",
                     STRING_GETTER_SETTER(ELECTRODE, chName, std::wstring,
-                                         20))  // name of electrode
+                                         20)) // name of electrode
       .def_readwrite("has_good_impedance",
-                     &ELECTRODE::bImpedance)  // if impedance is well (low)
+                     &ELECTRODE::bImpedance) // if impedance is well (low)
       .def_readwrite("impedance_value",
-                     &ELECTRODE::fImpedanceValue);  // value of impedance
+                     &ELECTRODE::fImpedanceValue); // value of impedance
 
   py::class_<CHANNEL_INFO>(m, "ChannelInfo")
       .def_property("chName",
                     STRING_GETTER_SETTER(CHANNEL_INFO, chName, std::wstring,
-                                         20))  // name of electrode
+                                         20)) // name of electrode
       .def_readwrite(
           "bTechnicalInfo",
-          &CHANNEL_INFO::bTechnicalInfo);  // if impedance is well (low)
+          &CHANNEL_INFO::bTechnicalInfo); // if impedance is well (low)
 
   py::class_<_EEGCHANNELS_INFO>(m, "EEGChannelsInfo")
       .def_property("channel_names", &eeg_channel_info_get_channel_names,
@@ -85,25 +86,25 @@ PYBIND11_MODULE(abmbciext, m) {
           LIST_STRING_GETTER(_ELECTRODES_INFO, cElName, std::wstring),
           LIST_STRING_SETTER(
               _ELECTRODES_INFO, cElName, MAX_NUM_ELECTRODE,
-              std::wstring))  //[in]the name of electrode max 20 characters
+              std::wstring)) //[in]the name of electrode max 20 characters
       .def_property(
           "command",
           LIST_GETTER(_ELECTRODES_INFO, nElCommand, MAX_NUM_ELECTRODE, int),
           LIST_SETTER(_ELECTRODES_INFO, nElCommand, MAX_NUM_ELECTRODE,
-                      int))  // Impedance command to be sent for this electrode
-                             // to be measured
+                      int)) // Impedance command to be sent for this electrode
+                            // to be measured
       .def_property(
           "channels",
           LIST_GETTER(_ELECTRODES_INFO, nElChannel, MAX_NUM_ELECTRODE, int),
           LIST_SETTER(_ELECTRODES_INFO, nElChannel, MAX_NUM_ELECTRODE,
-                      int))  // EEG channel to be used when measuring electrode
+                      int)) // EEG channel to be used when measuring electrode
       .def_property("ref_electrodes",
                     LIST_GETTER(_ELECTRODES_INFO, nElReferentialElectrode,
                                 MAX_NUM_ELECTRODE, int),
                     LIST_SETTER(_ELECTRODES_INFO, nElReferentialElectrode,
                                 MAX_NUM_ELECTRODE,
-                                int));  // Electrode to be used when
-                                        // substracting ref el. (-1 for none)
+                                int)); // Electrode to be used when
+                                       // substracting ref el. (-1 for none)
 
   py::class_<_AUXDATA_INFO>(m, "AuxDataInfo")
       .def_readwrite("is_ired", &_AUXDATA_INFO::bIred)
@@ -114,23 +115,23 @@ PYBIND11_MODULE(abmbciext, m) {
       .def_readwrite("has_haptics", &_AUXDATA_INFO::bHaptic);
 
   py::class_<_HARDWARE_INFO>(m, "HardwareInfo")
-      .def_readwrite("max_battery", &_HARDWARE_INFO::nBatteryMax)  // millivolts
-      .def_readwrite("min_battery", &_HARDWARE_INFO::nBatteryMin)  // millivolts
+      .def_readwrite("max_battery", &_HARDWARE_INFO::nBatteryMax) // millivolts
+      .def_readwrite("min_battery", &_HARDWARE_INFO::nBatteryMin) // millivolts
       .def_readwrite("tilt_a", &_HARDWARE_INFO::nTiltLinearTransformA)
       .def_readwrite("tilt_b", &_HARDWARE_INFO::nTiltLinearTransformB);
 
   py::class_<_SESSIONTYPES_INFO>(m, "SessionTypesInfo")
       .def_readwrite("is_decon_supported",
-                     &_SESSIONTYPES_INFO::bDecon)  // whether decontamination is
-                                                   // supported or not
+                     &_SESSIONTYPES_INFO::bDecon) // whether decontamination is
+                                                  // supported or not
       .def_readwrite(
           "classification_supported",
-          &_SESSIONTYPES_INFO::bBalert)  // whether b-alert classification is
-                                         // supported or not
+          &_SESSIONTYPES_INFO::bBalert) // whether b-alert classification is
+                                        // supported or not
       .def_readwrite(
           "workload_supported",
-          &_SESSIONTYPES_INFO::bWorkload);  // whether workload calculation is
-                                            // supported or not
+          &_SESSIONTYPES_INFO::bWorkload); // whether workload calculation is
+                                           // supported or not
 
   py::class_<_CHANNELMAP_INFO>(m, "ChannelMapInfo")
       .def_readwrite("device_type", &_CHANNELMAP_INFO::nDeviceTypeCode)
@@ -159,6 +160,25 @@ PYBIND11_MODULE(abmbciext, m) {
                     LIST_GETTER(_STATUS_INFO, OnLineImpValues, 24, int),
                     LIST_SETTER(_STATUS_INFO, OnLineImpValues, 24, int));
 
+  py::class_<OutPacket>(m, "OutPacket")
+      .def(py::init<std::string const &>()) // Bind the constructor
+      .def("encode",
+           [](OutPacket &self) {
+             int size;
+             char *encoded = self.encode(&size);
+             py::bytes result(encoded, size);
+             delete[] encoded; // Clean up the allocated memory
+             return result;
+           })                                   // Bind the encode method
+      .def_readwrite("data", &OutPacket::data); // Bind the data member
+
+  py::class_<InPacket>(m, "InPacket")
+      .def(py::init<char *, int>())
+      .def_readonly("counter", &InPacket::counter)
+      .def_readonly("data", &InPacket::data)
+      .def_readonly("userdata", &InPacket::userdata)
+      .def_readonly("timestamp", &InPacket::timestamp);
+
   py::enum_<HeadsetType>(m, "HeadsetType")
       .value("X24_QEEG", HeadsetType::X24_QEEG)
       .value("X24_STANDARD", HeadsetType::X24_STANDARD)
@@ -169,7 +189,8 @@ PYBIND11_MODULE(abmbciext, m) {
       .export_values();
 
   py::class_<ABMHeadset>(m, "Headset")
-      .def(py::init<HeadsetType>(), py::arg("headset_type") = HeadsetType::X24_QEEG)
+      .def(py::init<HeadsetType>(),
+           py::arg("headset_type") = HeadsetType::X24_QEEG)
       .def("init", &ABMHeadset::init, py::arg("log_path") = "")
       .def("get_battery_percentage", &ABMHeadset::get_battery_percentage)
       .def("set_destination_file", &ABMHeadset::set_destination_file)
@@ -179,6 +200,7 @@ PYBIND11_MODULE(abmbciext, m) {
            py::arg("block") = false)
       .def("get_state", &ABMHeadset::get_state)
       .def("get_technical_data", &ABMHeadset::get_technical_data)
+      .def("get_third_party_data", &ABMHeadset::get_third_party_data)
       .def("stop_acquisition", &ABMHeadset::stop_acquisition);
 
   // =======================================================
@@ -191,7 +213,7 @@ PYBIND11_MODULE(abmbciext, m) {
 
   m.def(
       "get_device_info_keep_connection",
-      [](_DEVICE_INFO* device_info) {
+      [](_DEVICE_INFO *device_info) {
         return GetDeviceInfoKeepConnection(device_info);
       },
       py::arg("device_info") = nullptr);
@@ -205,7 +227,7 @@ PYBIND11_MODULE(abmbciext, m) {
 
   m.def(
       "set_config_path",
-      [](std::wstring& path) {
+      [](std::wstring &path) {
         if (path.back() != L'\\') {
           path += L"\\";
         }
@@ -229,8 +251,8 @@ PYBIND11_MODULE(abmbciext, m) {
 
   m.def(
       "get_raw_data",
-      [](_DEVICE_INFO* di, int n_samples) {
-        float* data = GetRawData(n_samples);
+      [](_DEVICE_INFO *di, int n_samples) {
+        float *data = GetRawData(n_samples);
         int n_cols = di->nNumberOfChannel + 6;
         return py::array_t<float>(
             {n_samples, n_cols}, {sizeof(float) * n_cols, sizeof(float)}, data);

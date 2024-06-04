@@ -10,6 +10,7 @@
 #include <vector>
 #include "sdk/sdk.hpp"
 #include "headset/hwresult.hpp"
+#include "headset/packet.hpp"
 #include "headset/state.hpp"
 #ifdef __PYBIND11__
 #include <pybind11/pybind11.h>
@@ -36,6 +37,7 @@ class ABMHeadset {
     std::map<std::string, float> const& get_impedance_values(std::vector<std::string> electrodes = {});
     int const get_state(void);
     std::map<std::string, bool> const& get_technical_data(void);
+    InPacket const get_third_party_data(void);
     std::pair<float*, int> get_raw_data(void);
     std::map<std::string, std::vector<float>> get_raw_data_vector(void);
 #ifdef __PYBIND11__
