@@ -1,9 +1,9 @@
 #ifndef INCLUDE_HEADSET_PACKET_HPP_
 #define INCLUDE_HEADSET_PACKET_HPP_
 #include <chrono>
+#include <pybind11/chrono.h>
 #include <stdint.h>
 #include <string>
-#include <pybind11/chrono.h>
 #define HEADER_SIZE 9
 #define PNNL 1
 #define BYTE1(x) (x & 0xFF)
@@ -11,7 +11,8 @@
 #define BYTE3(x) (BYTE2(x >> 8))
 #define BYTE4(x) (BYTE3(x >> 8))
 #define BYTESWAP16(x) ((BYTE1(x) << 8) | BYTE2(x))
-#define BYTESWAP32(x) ((BYTE1(x) << 24) | (BYTE2(x) << 16) | (BYTE3(x) << 8) | BYTE4(x))
+#define BYTESWAP32(x)                                                          \
+  ((BYTE1(x) << 24) | (BYTE2(x) << 16) | (BYTE3(x) << 8) | BYTE4(x))
 
 #pragma pack(push, 1)
 typedef struct OUTPACKET {
