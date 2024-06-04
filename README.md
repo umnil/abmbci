@@ -20,10 +20,13 @@ $env:ABMSDK="path\to\sdk"
 
 Unfortunately, these libraries only work in 32-bit DLLs for windows, meaning
 these will only be compatible with windows software and in a 32-bit
-environment. This is easily resolved using conda
+environment. This is easily resolved using conda:
 
 ```bash
 
+# NOTE: This is only necessary if attempting to actually get the device
+# working on a windows machine. If only seeking to use the mock system
+# do not set this and force 32BIT.
 export CONDA_FORCE_32BIT=1
 conda create -n environment_name
 
