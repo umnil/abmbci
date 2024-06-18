@@ -152,7 +152,7 @@ class TestHeadset:
     @property
     def data_runs(self) -> List:
         if len(self._data_runs) < 1:
-            self._data_runs = [i.get_data() for i in self.raw_runs]
+            self._data_runs = [i.get_data(units="uV") for i in self.raw_runs]
 
         return self._data_runs
 
