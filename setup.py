@@ -13,9 +13,24 @@ sdk_bin_dir = sdk_dir / "bin"
 sdk_lib_dir = sdk_dir / "lib"
 sdk_inc_dir = sdk_dir / "include"
 
+ext_modules = [
+    Pybind11Extension(
+        "_packet",
+        [
+            "src/headset/packet.cpp",
+            "src/packet.cpp",
+        ],
+        include_dirs=[str(sdk_inc_dir), "include"],
+        define_macros=[
+            ("__PYBIND11__", "1"),
+        ],
+    )
+]
+data_files = []
+
 if sys.platform == "win32":
     # only build on win32
-    ext_modules = [
+    ext_modules.append(
         Pybind11Extension(
             "_abmbci",
             [
@@ -37,7 +52,7 @@ if sys.platform == "win32":
             library_dirs=[str(sdk_lib_dir)],
             libraries=["ABM_Athena"],
         )
-    ]
+    )
     data_files = [
         (
             "lib\\site-packages\\",
@@ -47,23 +62,7 @@ if sys.platform == "win32":
             ],
         )
     ]
-else:
-    ext_modules = []
-    data_files = []
 
-ext_modules.append(
-    Pybind11Extension(
-        "_packet",
-        [
-            "src/headset/packet.cpp",
-            "src/packet.cpp",
-        ],
-        include_dirs=[str(sdk_inc_dir), "include"],
-        define_macros=[
-            ("__PYBIND11__", "1"),
-        ],
-    )
-)
 
 setup(
     name="abmbci",
