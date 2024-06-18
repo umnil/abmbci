@@ -20,7 +20,6 @@ if sys.platform == "win32":
             "_abmbci",
             [
                 "src/headset/abmheadset.cpp",
-                "src/headset/packet.cpp",
                 "src/sdk/callbacks.cpp",
                 "src/sdk/device_info.cpp",
                 "src/sdk/eeg_channel_info.cpp",
