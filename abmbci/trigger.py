@@ -1,4 +1,4 @@
-from abmbciext import OutPacket
+from _packet import OutPacket
 from serial import Serial
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -25,9 +25,7 @@ class Trigger:
             return self._port_name
 
         potential_port: List[ListPortInfo] = [
-            dev
-            for dev in comports()
-            if dev.hwid == self._hwid
+            dev for dev in comports() if dev.hwid == self._hwid
         ]
 
         if len(potential_port) < 1:

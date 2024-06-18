@@ -17,7 +17,7 @@ if sys.platform == "win32":
     # only build on win32
     ext_modules = [
         Pybind11Extension(
-            "abmbciext",
+            "_abmbci",
             [
                 "src/headset/abmheadset.cpp",
                 "src/headset/packet.cpp",
@@ -49,8 +49,22 @@ if sys.platform == "win32":
         )
     ]
 else:
-    ext_modules: List = []
-    data_files: List = []
+    ext_modules = []
+    data_files = []
+
+ext_modules.append(
+    Pybind11Extension(
+        "_packet",
+        [
+            "src/headset/packet.cpp",
+            "src/packet.cpp",
+        ],
+        include_dirs=[str(sdk_inc_dir), "include"],
+        define_macros=[
+            ("__PYBIND11__", "1"),
+        ],
+    )
+)
 
 setup(
     name="abmbci",
