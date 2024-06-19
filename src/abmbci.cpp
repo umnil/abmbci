@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include "headset/abmheadset.hpp"
-#include "headset/packet.hpp"
+#include "packet.hpp"
 #include "sdk/callbacks.hpp"
 #include "sdk/channel_info.hpp"
 #include "sdk/device_info.hpp"
@@ -159,25 +159,6 @@ PYBIND11_MODULE(_abmbci, m) {
       .def_property("online_imp_values",
                     LIST_GETTER(_STATUS_INFO, OnLineImpValues, 24, int),
                     LIST_SETTER(_STATUS_INFO, OnLineImpValues, 24, int));
-
-  py::class_<OutPacket>(m, "OutPacket")
-      .def(py::init<std::string const &>()) // Bind the constructor
-      .def("encode",
-           [](OutPacket &self) {
-             int size;
-             char *encoded = self.encode(&size);
-             py::bytes result(encoded, size);
-             delete[] encoded; // Clean up the allocated memory
-             return result;
-           })                                   // Bind the encode method
-      .def_readwrite("data", &OutPacket::data); // Bind the data member
-
-  py::class_<InPacket>(m, "InPacket")
-      .def(py::init<char *, int>())
-      .def_readonly("counter", &InPacket::counter)
-      .def_readonly("data", &InPacket::data)
-      .def_readonly("userdata", &InPacket::userdata)
-      .def_readonly("timestamp", &InPacket::timestamp);
 
   py::enum_<HeadsetType>(m, "HeadsetType")
       .value("X24_QEEG", HeadsetType::X24_QEEG)

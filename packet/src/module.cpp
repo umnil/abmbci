@@ -1,13 +1,10 @@
-#define UNICODE
-#define NOMINMAX 1
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#undef UNICODE
 #include <iostream>
-#include "headset/packet.hpp"
+#include "packet.hpp"
 
 namespace py = pybind11;
 

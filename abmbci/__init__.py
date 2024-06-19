@@ -3,12 +3,13 @@ from . import utils
 from .trigger import Trigger
 
 try:
-    import _abmbci as abm  # type: ignore
+    from abmbci._abmbci import Headset, HeadsetType
 except ModuleNotFoundError:
     warn("ABM software not available switching to mock system")
-    from . import mock_abm as abm
+    from .mock_abm import Headset, HeadsetType
 
+Headset
+HeadsetType
 Trigger
-abm
 utils
 warn

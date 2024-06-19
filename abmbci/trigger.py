@@ -1,4 +1,4 @@
-from _packet import OutPacket
+from abmbci._packet import OutPacket
 from serial import Serial
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo

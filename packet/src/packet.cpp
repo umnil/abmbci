@@ -1,4 +1,4 @@
-#include "headset/packet.hpp"
+#include "packet.hpp"
 #include <iostream>
 #include <numeric>
 #include <stdlib.h>
