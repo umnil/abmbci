@@ -1,5 +1,6 @@
 .DS_Store
 build/
+_skbuild/
 *.egg-info/
 *.tar.gz
 dist/

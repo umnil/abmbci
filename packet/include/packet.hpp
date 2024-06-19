@@ -3,6 +3,7 @@
 #include <chrono>
 #include <stdint.h>
 #include <string>
+#include <vector>
 #define HEADER_SIZE 9
 #define PNNL 1
 #define BYTE1(x) (x & 0xFF)
