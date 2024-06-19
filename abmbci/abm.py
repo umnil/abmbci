@@ -1,5 +1,5 @@
 import logging
-import abmbciext as abm  # type: ignore
+import _abmbci as abm  # type: ignore
 
 LOGGER = logging.getLogger(name=__name__)
 

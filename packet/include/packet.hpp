@@ -1,9 +1,9 @@
 #ifndef INCLUDE_HEADSET_PACKET_HPP_
 #define INCLUDE_HEADSET_PACKET_HPP_
 #include <chrono>
-#include <pybind11/chrono.h>
 #include <stdint.h>
 #include <string>
+#include <vector>
 #define HEADER_SIZE 9
 #define PNNL 1
 #define BYTE1(x) (x & 0xFF)

@@ -1,14 +1,12 @@
 [build-system]
-requires = ["setuptools", "wheel", "pybind11"]
+requires = ["setuptools", "wheel", "pybind11", "scikit-build"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "abmbci"
-version = "0.1.24"
+version = "0.2.0"
 dependencies = [
     "numpy",
-    "pandas"
+    "pandas",
+    "pyserial"
 ]
-
-[tools.setuptools.packages.find]
-exclude=["tests"]
