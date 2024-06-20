@@ -4,7 +4,9 @@ import pandas as pd  # type: ignore
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
+from queue import Queue
 from typing import Dict, List, Optional
+from ._packet import InPacket  # type: ignore
 
 
 class HeadsetType(Enum):
@@ -123,10 +125,12 @@ class TestHeadset:
         self._headset_type: HeadsetType = headset_type
         self._state: HeadsetState = HeadsetState.IDLE
         self.cur_time: Optional[datetime] = None
+        self.init_time: datetime = datetime.now()
         self.prev_sample: int = 0
         self.raw_runs: List[mne.io.Raw] = sample_data
         self.start_sample: int = 0
         self.start_time: Optional[datetime] = None
+        self.trigger_file: Optional[Queue] = None
 
     @property
     def all_data(self) -> np.ndarray:
@@ -287,6 +291,16 @@ class TestHeadset:
             quality.
         """
         return {i.lower(): True for i in self.get_electrode_names()}
+
+    def get_third_party_data(self) -> InPacket:
+        if self.trigger_file is None:
+            return InPacket("", 0)
+
+        if self.trigger_file.qsize() < 1:
+            return InPacket("", 0)
+
+        data: bytes = self.trigger_file.get_nowait()
+        return InPacket(data, len(data))
 
     def init(self) -> int:
         """Dummy function for initialization"""
