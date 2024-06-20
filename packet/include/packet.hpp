@@ -35,12 +35,15 @@ typedef struct INPACKET {
 class OutPacket {
 public:
   OutPacket(std::string const &data);
+  OutPacket(uint8_t *data);
   char *encode(int *);
+  std::string get_data_(uint8_t *data);
   std::string data;
 };
 
 class InPacket {
 public:
+  InPacket(std::chrono::milliseconds timestamp, std::string userdata);
   InPacket(char *in_data, int len);
   int const counter;
   std::vector<uint8_t> const data;
@@ -48,6 +51,8 @@ public:
   std::string const userdata;
 
 private:
+  char *encode_(std::chrono::milliseconds, std::string, int *);
+  std::vector<uint8_t> encode_data_(std::chrono::milliseconds, std::string);
   int const get_counter_(char *data);
   std::string const get_data_(char *data);
   std::chrono::milliseconds const get_timestamp_(char *data);

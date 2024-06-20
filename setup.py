@@ -1,8 +1,8 @@
 import os
 import sys
-from skbuild import setup
-from setuptools import find_packages
+from skbuild import setup  # type: ignore
 from pathlib import Path
+from typing import List
 
 sdk_dir = Path(os.environ["ABMSDK"])
 system_dir = sdk_dir.parent
@@ -23,7 +23,7 @@ if sys.platform == "win32":
         )
     ]
 else:
-    data_files = []
+    data_files: List = []
 
 setup(
     name="abmbci",
